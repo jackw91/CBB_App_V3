@@ -11,10 +11,14 @@ const LIFT_META = {
   deadlift: { label: "Deadlift", color: "#e0a458" },
 };
 
+/* The parser only tags entry.lift for %RM-based sets (it reads the formula's
+   training-max reference). RPE/opener/text/load-drop sets for the very same
+   lifts (e.g. "2ct Pause Squat" run at RPE) never get tagged that way, so we
+   fall back to matching the exercise name for every entry type. */
 function inferLiftFromName(name) {
   if (!name) return null;
   const n = name.toLowerCase();
-  if (n.includes("row")) return null;
+  if (n.includes("row")) return null; // e.g. "Seated Row (mimic bench movement)" is a row, not a bench press
   if (n.includes("squat")) return "squat";
   if (n.includes("deadlift")) return "deadlift";
   if (n.includes("bench") || n.includes("board press") || n.includes("pin press") || (n.includes("close grip") && n.includes("press"))) return "bench";
@@ -35,7 +39,7 @@ const KG_PER_LB = 0.45359237;
 const TAPER_LABELS_SORTED = Object.keys(PROGRAM_DATA.taper).sort((a, b) => {
   const na = parseInt(a);
   const nb = parseInt(b);
-  return nb - na;
+  return nb - na; // 5,4,3,2
 });
 
 /* ============================= UNIT / MATH HELPERS ============================= */
@@ -150,7 +154,7 @@ async function storageGet(key, fallback) {
       if (val != null) return JSON.parse(val);
     }
   } catch (e) {
-    /* fallback */
+    /* not found -> fallback */
   }
   return fallback;
 }
@@ -196,6 +200,47 @@ async function loadAllSessions() {
 
 const EMPTY_SESSION = () => ({ completion: {}, logs: {}, notes: "", date: "" });
 
+/* A shared AudioContext, created/resumed only inside a real user-gesture
+   handler (e.g. tapping a set checkbox) so the browser's autoplay policy
+   allows it. Once unlocked this way, it stays usable for the beep that
+   plays later when the rest timer reaches zero (no gesture required then). */
+let sharedAudioCtx = null;
+function primeAudioCtx() {
+  try {
+    if (!sharedAudioCtx) {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (Ctx) sharedAudioCtx = new Ctx();
+    }
+    if (sharedAudioCtx && sharedAudioCtx.state === "suspended") sharedAudioCtx.resume();
+  } catch (e) {
+    /* Web Audio unavailable — the visual alert still works fine on its own. */
+  }
+}
+function playRestCompleteTone() {
+  const ctx = sharedAudioCtx;
+  if (!ctx) return;
+  try {
+    const beep = (freq, startAt, dur) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.0001, startAt);
+      gain.gain.exponentialRampToValueAtTime(0.35, startAt + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, startAt + dur);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(startAt);
+      osc.stop(startAt + dur + 0.02);
+    };
+    const t0 = ctx.currentTime;
+    beep(880, t0, 0.16);
+    beep(1046.5, t0 + 0.2, 0.22);
+  } catch (e) {
+    /* ignore playback errors */
+  }
+}
+
 function todayISO() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -206,6 +251,9 @@ function totalSetsFor(entry) {
   return Number.isFinite(n) && n > 0 ? n : 1;
 }
 
+/* Reads a per-set completion array for an entry, tolerant of the older
+   single-boolean format (a fully-checked exercise from before per-set
+   tracking existed) and of an array whose length no longer matches sets. */
 function getSetStates(entry, session, idx) {
   const total = totalSetsFor(entry);
   const raw = session.completion?.[idx];
@@ -218,12 +266,33 @@ function getSetStates(entry, session, idx) {
   return Array(total).fill(false);
 }
 
+/* Whether every set of every exercise in a day has been checked off. */
 function isDayComplete(entries, session) {
   if (!entries || entries.length === 0) return false;
   return entries.every((entry, idx) => {
     const st = getSetStates(entry, session, idx);
     return st.length > 0 && st.every(Boolean);
   });
+}
+
+/* The day immediately after the most recently completed day, walking the
+   program in order (week 1 day 1 ... week 16 day 4). If nothing has been
+   completed yet, that's week 1 day 1. Returns null once the whole program
+   is finished. */
+function computeNextWorkout(allSessions) {
+  const sequence = [];
+  for (let w = 1; w <= 16; w++) {
+    for (let d = 1; d <= 4; d++) {
+      if (getEntriesAbs(w, d).length > 0) sequence.push({ week: w, day: d });
+    }
+  }
+  let lastCompletedIndex = -1;
+  sequence.forEach((pt, i) => {
+    const session = allSessions[`${pt.week}:${pt.day}`];
+    if (session && isDayComplete(getEntriesAbs(pt.week, pt.day), session)) lastCompletedIndex = i;
+  });
+  const nextIndex = lastCompletedIndex + 1;
+  return nextIndex < sequence.length ? sequence[nextIndex] : null;
 }
 
 /* ============================= SMALL UI PIECES ============================= */
@@ -366,6 +435,7 @@ function LoadDisplay({ entry, maxesLb, unit, roundToLb, roundToKg, barType }) {
   return null;
 }
 
+/* small numeric input used in the log-expand panel */
 function LogField({ label, value, onChange, step, placeholder }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
@@ -747,6 +817,7 @@ function SettingsPanel({ maxesLb, roundToLb, roundToKg, unit, barType, startDate
 /* ============================= REST TIMER ============================= */
 function RestTimerBar({ timer, onDismiss, onExtend }) {
   const [now, setNow] = useState(Date.now());
+  const beepedRef = useRef(null);
   useEffect(() => {
     if (!timer) return;
     const id = setInterval(() => setNow(Date.now()), 250);
@@ -758,22 +829,83 @@ function RestTimerBar({ timer, onDismiss, onExtend }) {
   const pct = Math.min(1, Math.max(0, 1 - remaining / timer.duration));
   const done = remaining <= 0;
   const urgent = !done && remaining <= 5;
+
+  if (done && beepedRef.current !== timer.endAt) {
+    beepedRef.current = timer.endAt;
+    playRestCompleteTone();
+  }
+
+  if (done) {
+    return (
+      <div
+        onClick={onDismiss}
+        style={{
+          position: "fixed",
+          inset: 0,
+          zIndex: 80,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 18,
+          cursor: "pointer",
+          animation: "cbRestFlash 0.9s ease-in-out infinite",
+          textAlign: "center",
+          padding: 24,
+        }}
+      >
+        <span style={{ width: 84, height: 84, borderRadius: "50%", background: "#7fae7a", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="#0f1710" strokeWidth="3">
+            <path d="M4 12.5l5 5L20 6" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </span>
+        <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 30, fontWeight: 700, color: "#f2ede4", textTransform: "uppercase", letterSpacing: "0.04em" }}>Rest Over</div>
+        <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 16, color: "#c9c2b6", maxWidth: 320 }}>{timer.label}</div>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onDismiss();
+          }}
+          style={{
+            marginTop: 10,
+            background: "#7fae7a",
+            border: "none",
+            borderRadius: 8,
+            color: "#0f1710",
+            fontFamily: "'Oswald', sans-serif",
+            fontWeight: 700,
+            fontSize: 15,
+            textTransform: "uppercase",
+            letterSpacing: "0.04em",
+            padding: "14px 32px",
+            cursor: "pointer",
+          }}
+        >
+          Let's Go
+        </button>
+        <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "#726b5f", marginTop: 4 }}>Tap anywhere to continue</div>
+      </div>
+    );
+  }
+
+  const accent = urgent ? "#e0a458" : "#c8553d";
   const mm = Math.floor(remaining / 60);
   const ss = String(remaining % 60).padStart(2, "0");
-  const accent = done ? "#7fae7a" : urgent ? "#e0a458" : "#c8553d";
   return (
     <div
       className="cb-timerbar"
       style={{
         position: "fixed",
-        left: 0,
-        right: 0,
-        bottom: 0,
+        left: 10,
+        right: 10,
+        bottom: "calc(env(safe-area-inset-bottom, 0px) + 18px)",
         zIndex: 50,
         background: "#1a1815",
-        borderTop: `3px solid ${accent}`,
-        boxShadow: `0 -6px 28px rgba(0,0,0,0.6), 0 -2px 22px ${accent}55`,
-        animation: done ? "cbRestDonePulse 1.1s ease-in-out infinite" : urgent ? "cbRestUrgentPulse 0.6s ease-in-out infinite" : "cbRestPulse 2.2s ease-in-out infinite",
+        border: `2px solid ${accent}`,
+        borderRadius: 14,
+        boxShadow: `0 -6px 28px rgba(0,0,0,0.6), 0 2px 22px ${accent}55`,
+        animation: urgent ? "cbRestUrgentPulse 0.6s ease-in-out infinite" : "cbRestPulse 2.2s ease-in-out infinite",
+        overflow: "hidden",
       }}
     >
       <div style={{ height: 4, background: "#2a2824", overflow: "hidden" }}>
@@ -806,32 +938,24 @@ function RestTimerBar({ timer, onDismiss, onExtend }) {
             />
           </svg>
           <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            {done ? (
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="3">
-                <path d="M4 12.5l5 5L20 6" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            ) : (
-              <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: "#726b5f" }}>REST</span>
-            )}
+            <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: "#726b5f" }}>REST</span>
           </div>
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 13, textTransform: "uppercase", color: accent, letterSpacing: "0.05em", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-            {done ? "Rest complete — go again" : timer.label}
+            {timer.label}
           </div>
           <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 34, lineHeight: 1.1, color: "#f2ede4", fontWeight: 700, letterSpacing: "0.01em" }}>
             {mm}:{ss}
           </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-          {!done && (
-            <button
-              onClick={onExtend}
-              style={{ background: "transparent", border: "1px solid #3a3733", color: "#c9c2b6", borderRadius: 6, padding: "10px 12px", fontSize: 12, cursor: "pointer", fontFamily: "'Oswald', sans-serif", fontWeight: 600 }}
-            >
-              +30s
-            </button>
-          )}
+          <button
+            onClick={onExtend}
+            style={{ background: "transparent", border: "1px solid #3a3733", color: "#c9c2b6", borderRadius: 6, padding: "10px 12px", fontSize: 12, cursor: "pointer", fontFamily: "'Oswald', sans-serif", fontWeight: 600 }}
+          >
+            +30s
+          </button>
           <button
             onClick={onDismiss}
             aria-label="Dismiss rest timer"
@@ -846,13 +970,32 @@ function RestTimerBar({ timer, onDismiss, onExtend }) {
 }
 
 /* ============================= WEEK OVERVIEW (main page) ============================= */
-function WeekOverview({ week, allSessions, maxesLb, unit, roundToLb, roundToKg, barType, onJumpToDay, onPrevWeek, onNextWeek }) {
+function WeekOverview({ week, allSessions, nextWorkout, maxesLb, unit, roundToLb, roundToKg, barType, onJumpToDay, onPrevWeek, onNextWeek }) {
   const isTaperWeek = Number(week) === 16;
   const dayLabels = isTaperWeek
     ? TAPER_LABELS_SORTED.map((l, i) => ({ day: i + 1, label: l.replace(/ from Competition/i, "") }))
     : ALL_DAYS.map((d) => ({ day: d, label: `Day ${d}` }));
   const phaseName = weekToPhase(week);
   const heading = isTaperWeek ? "Taper Week" : `Week ${week}`;
+
+  const [expandedDays, setExpandedDays] = useState(() => new Set());
+  const nextWorkoutKey = nextWorkout ? `${nextWorkout.week}:${nextWorkout.day}` : "none";
+  useEffect(() => {
+    if (nextWorkout && nextWorkout.week === Number(week)) {
+      setExpandedDays(new Set([nextWorkout.day]));
+    } else {
+      setExpandedDays(new Set());
+    }
+  }, [week, nextWorkoutKey]);
+
+  const toggleDay = (day) => {
+    setExpandedDays((prev) => {
+      const next = new Set(prev);
+      if (next.has(day)) next.delete(day);
+      else next.add(day);
+      return next;
+    });
+  };
 
   return (
     <div style={{ marginTop: 16 }}>
@@ -883,55 +1026,109 @@ function WeekOverview({ week, allSessions, maxesLb, unit, roundToLb, roundToKg, 
           if (entries.length === 0) return null;
           const session = allSessions[`${week}:${day}`] || EMPTY_SESSION();
           const complete = isDayComplete(entries, session);
+          const isNext = !!nextWorkout && nextWorkout.week === Number(week) && nextWorkout.day === day;
+          const expanded = expandedDays.has(day);
+          const borderColor = complete ? "#4a8752" : isNext ? "#c8553d" : "#2a2824";
+          const headerBg = complete ? "rgba(127,174,122,0.16)" : isNext ? "rgba(200,85,61,0.12)" : "#1a1815";
+
           return (
-            <div key={day} style={{ border: `1px solid ${complete ? "#3d5a45" : "#2a2824"}`, borderRadius: 6, overflow: "hidden", opacity: complete ? 0.75 : 1 }}>
+            <div
+              key={day}
+              style={{
+                border: `2px solid ${borderColor}`,
+                borderRadius: 6,
+                overflow: "hidden",
+                boxShadow: isNext ? "0 0 0 3px rgba(200,85,61,0.18)" : "none",
+              }}
+            >
               <div
-                onClick={() => onJumpToDay(day)}
+                onClick={() => toggleDay(day)}
                 style={{
                   display: "flex",
                   justifyContent: "space-between",
                   alignItems: "center",
-                  padding: "10px 16px",
-                  background: complete ? "rgba(127,174,122,0.08)" : "#1a1815",
+                  padding: "12px 16px",
+                  background: headerBg,
                   cursor: "pointer",
+                  gap: 10,
+                  flexWrap: "wrap",
+                  rowGap: 8,
                 }}
               >
-                <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  {complete && (
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#7fae7a" strokeWidth="3">
-                      <path d="M4 12.5l5 5L20 6" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  )}
+                <span style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", rowGap: 6 }}>
+                  {complete ? (
+                    <span style={{ width: 22, height: 22, borderRadius: "50%", background: "#4a8752", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0f1710" strokeWidth="4">
+                        <path d="M4 12.5l5 5L20 6" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </span>
+                  ) : isNext ? (
+                    <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#c8553d", flexShrink: 0 }} />
+                  ) : null}
                   <span
                     style={{
                       fontFamily: "'Oswald', sans-serif",
                       fontSize: 15,
-                      fontWeight: 600,
-                      color: complete ? "#8fae8a" : "#e8d9c5",
+                      fontWeight: 700,
+                      color: complete ? "#a8d4a0" : isNext ? "#e8b199" : "#e8d9c5",
                       textTransform: "uppercase",
                       letterSpacing: "0.04em",
-                      textDecoration: complete ? "line-through" : "none",
                     }}
                   >
                     {label}
                   </span>
-                </span>
-                <span style={{ fontSize: 12, color: "#726b5f", fontFamily: "'IBM Plex Mono', monospace" }}>Open →</span>
-              </div>
-              {entries.map((entry, idx) => (
-                <div key={idx} style={{ display: "flex", flexWrap: "wrap", rowGap: 6, justifyContent: "space-between", alignItems: "center", padding: "8px 16px", borderTop: "1px solid #2a2824" }}>
-                  <div style={{ display: "flex", alignItems: "center", minWidth: 0, flexWrap: "wrap", rowGap: 4, flex: "1 1 auto", marginRight: 10 }}>
-                    <LiftBadge lift={resolveLift(entry)} />
-                    <span style={{ fontFamily: "'Oswald', sans-serif", fontSize: 14, color: "#c9c2b6", wordBreak: "break-word" }}>{entry.exercise}</span>
-                    <span style={{ marginLeft: 10, fontSize: 13, color: "#a89f90", fontFamily: "'IBM Plex Mono', monospace", flexShrink: 0 }}>
-                      {entry.sets}×{entry.reps ?? "-"}
+                  {complete && (
+                    <span style={{ fontFamily: "'Oswald', sans-serif", fontSize: 10, fontWeight: 700, color: "#0f1710", background: "#7fae7a", borderRadius: 3, padding: "2px 7px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                      Completed
                     </span>
+                  )}
+                  {isNext && !complete && (
+                    <span style={{ fontFamily: "'Oswald', sans-serif", fontSize: 10, fontWeight: 700, color: "#1c1a17", background: "#c8553d", borderRadius: 3, padding: "2px 7px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                      Next Workout
+                    </span>
+                  )}
+                </span>
+                <span style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#726b5f" strokeWidth="2" style={{ transform: expanded ? "rotate(180deg)" : "none", transition: "transform 0.15s" }}>
+                    <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onJumpToDay(day);
+                    }}
+                    style={{
+                      background: "transparent",
+                      border: "1px solid #3a3733",
+                      borderRadius: 4,
+                      color: "#c9c2b6",
+                      fontFamily: "'Oswald', sans-serif",
+                      fontSize: 11,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.04em",
+                      padding: "6px 10px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    Open →
+                  </button>
+                </span>
+              </div>
+              {expanded &&
+                entries.map((entry, idx) => (
+                  <div key={idx} style={{ display: "flex", flexWrap: "wrap", rowGap: 6, justifyContent: "space-between", alignItems: "center", padding: "8px 16px", borderTop: "1px solid #2a2824" }}>
+                    <div style={{ display: "flex", alignItems: "center", minWidth: 0, flexWrap: "wrap", rowGap: 4, flex: "1 1 auto", marginRight: 10 }}>
+                      <LiftBadge lift={resolveLift(entry)} />
+                      <span style={{ fontFamily: "'Oswald', sans-serif", fontSize: 14, color: "#c9c2b6", wordBreak: "break-word" }}>{entry.exercise}</span>
+                      <span style={{ marginLeft: 10, fontSize: 13, color: "#a89f90", fontFamily: "'IBM Plex Mono', monospace", flexShrink: 0 }}>
+                        {entry.sets}×{entry.reps ?? "-"}
+                      </span>
+                    </div>
+                    <div style={{ flexShrink: 0 }}>
+                      <LoadDisplay entry={entry} maxesLb={maxesLb} unit={unit} roundToLb={roundToLb} roundToKg={roundToKg} barType={barType} />
+                    </div>
                   </div>
-                  <div style={{ flexShrink: 0 }}>
-                    <LoadDisplay entry={entry} maxesLb={maxesLb} unit={unit} roundToLb={roundToLb} roundToKg={roundToKg} barType={barType} />
-                  </div>
-                </div>
-              ))}
+                ))}
             </div>
           );
         })}
@@ -940,7 +1137,7 @@ function WeekOverview({ week, allSessions, maxesLb, unit, roundToLb, roundToKg, 
   );
 }
 
-/* ============================= VIEW THE PROGRAM ============================= */
+/* ============================= VIEW THE PROGRAM (phase/week directory) ============================= */
 function ProgramView({ phase, onSelectPhase, allSessions, onGoToWeek }) {
   const isTaperPhase = phase === "Taper Week";
 
@@ -1012,7 +1209,7 @@ function ProgramView({ phase, onSelectPhase, allSessions, onGoToWeek }) {
   );
 }
 
-/* ============================= INSIGHTS ============================= */
+/* ============================= INSIGHTS (E1RM CHART + HEATMAP) ============================= */
 function InsightsView({ unit, roundToLb, roundToKg, sessions, loadingData }) {
   const chartData = useMemo(() => {
     const perWeek = {};
@@ -1530,7 +1727,7 @@ function CalendarView({ sessions, loadingData, onJumpToSession }) {
 
 /* ============================= MAIN APP ============================= */
 export default function CalgaryBarbellApp() {
-  const [mode, setMode] = useState("overview");
+  const [mode, setMode] = useState("overview"); // overview | log | program | calendar | insights
   const [phase, setPhase] = useState("Weeks 1-4");
   const [week, setWeek] = useState("1");
   const [day, setDay] = useState("1");
@@ -1547,10 +1744,13 @@ export default function CalgaryBarbellApp() {
 
   const [session, setSession] = useState(EMPTY_SESSION());
   const [expandedIdx, setExpandedIdx] = useState(null);
-  const [timer, setTimer] = useState(null);
-  const [allSessions, setAllSessions] = useState({});
+  const [timer, setTimer] = useState(null); // { label, endAt, duration }
+  const [allSessions, setAllSessions] = useState({}); // "week:day" -> session, across the whole program
   const [loadingHistory, setLoadingHistory] = useState(true);
-  const [historyExercise, setHistoryExercise] = useState(null);
+  const [historyExercise, setHistoryExercise] = useState(null); // exercise name for drill-down modal
+  const didInitialJump = useRef(false);
+
+  const nextWorkout = useMemo(() => computeNextWorkout(allSessions), [allSessions]);
 
   const isTaper = phase === "Taper Week";
   const absWeek = isTaper ? 16 : Number(week);
@@ -1558,6 +1758,7 @@ export default function CalgaryBarbellApp() {
   const entries = getEntriesAbs(absWeek, absDay);
   const skey = sessionKey(absWeek, absDay);
 
+  /* ---- load settings once ---- */
   useEffect(() => {
     (async () => {
       const saved = await storageGet("settings", null);
@@ -1577,14 +1778,28 @@ export default function CalgaryBarbellApp() {
     storageSet("settings", { maxesLb, roundToLb, roundToKg, unit, barType, startDate });
   }, [maxesLb, roundToLb, roundToKg, unit, barType, startDate, settingsLoaded]);
 
+  /* ---- load the whole program's session history once, for Insights / Calendar / drill-down ---- */
   useEffect(() => {
     (async () => {
       const map = await loadAllSessions();
       setAllSessions(map);
       setLoadingHistory(false);
+      if (!didInitialJump.current) {
+        didInitialJump.current = true;
+        const next = computeNextWorkout(map);
+        if (next) {
+          const targetPhase = weekToPhase(next.week);
+          if (targetPhase) {
+            setPhase(targetPhase);
+            if (targetPhase === "Taper Week") setTaperLabel(TAPER_LABELS_SORTED[next.day - 1]);
+            else setWeek(String(next.week));
+          }
+        }
+      }
     })();
   }, []);
 
+  /* ---- load session whenever the viewed day changes ---- */
   useEffect(() => {
     let cancelled = false;
     setExpandedIdx(null);
@@ -1619,6 +1834,7 @@ export default function CalgaryBarbellApp() {
       if (nowChecked) {
         const restSec = Number(entry?.rest);
         if (restSec) {
+          primeAudioCtx();
           setTimer({ label: entry.exercise, endAt: Date.now() + restSec * 1000, duration: restSec });
         }
       }
@@ -1647,17 +1863,20 @@ export default function CalgaryBarbellApp() {
     [session, persistSession]
   );
 
+  /* ---- keep week/day valid when phase changes ---- */
   useEffect(() => {
     if (!isTaper) {
       const weeks = Object.keys(PROGRAM_DATA.phases[phase] || {}).sort((a, b) => Number(a) - Number(b));
       if (weeks.length && !weeks.includes(week)) setWeek(weeks[0]);
     }
+    // eslint-disable-next-line
   }, [phase]);
   useEffect(() => {
     if (!isTaper) {
       const days = Object.keys(PROGRAM_DATA.phases[phase]?.[week] || {}).sort((a, b) => Number(a) - Number(b));
       if (days.length && !days.includes(day)) setDay(days[0]);
     }
+    // eslint-disable-next-line
   }, [phase, week]);
 
   const doneCount = entries.filter((entry, i) => {
@@ -1731,7 +1950,7 @@ export default function CalgaryBarbellApp() {
         background: "#141311",
         minHeight: 560,
         color: "#f2ede4",
-        padding: "22px 18px 90px",
+        padding: "22px 18px 130px",
         borderRadius: 8,
         position: "relative",
         maxWidth: 680,
@@ -1753,13 +1972,13 @@ export default function CalgaryBarbellApp() {
           0%, 100% { box-shadow: 0 -6px 28px rgba(0,0,0,0.6), 0 -2px 22px rgba(224,164,88,0.35); }
           50% { box-shadow: 0 -6px 28px rgba(0,0,0,0.6), 0 -5px 42px rgba(224,164,88,0.8); }
         }
-        @keyframes cbRestDonePulse {
-          0%, 100% { box-shadow: 0 -6px 28px rgba(0,0,0,0.6), 0 -2px 22px rgba(127,174,122,0.3); background: #1a1815; }
-          50% { box-shadow: 0 -6px 28px rgba(0,0,0,0.6), 0 -5px 40px rgba(127,174,122,0.7); background: #1e2620; }
+        @keyframes cbRestFlash {
+          0%, 100% { background: rgba(15,23,16,0.97); }
+          50% { background: rgba(50,90,55,0.97); }
         }
 
         @media (max-width: 480px) {
-          .cb-app { padding: 14px 10px 100px !important; }
+          .cb-app { padding: 14px 10px 130px !important; }
           .cb-title-eyebrow { font-size: 10px !important; letter-spacing: 0.18em !important; }
           .cb-title-main { font-size: 21px !important; }
           .cb-header { flex-wrap: wrap !important; row-gap: 10px !important; }
@@ -1953,6 +2172,7 @@ export default function CalgaryBarbellApp() {
         <WeekOverview
           week={absWeek}
           allSessions={allSessions}
+          nextWorkout={nextWorkout}
           maxesLb={maxesLb}
           unit={unit}
           roundToLb={roundToLb}
