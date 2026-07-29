@@ -1948,28 +1948,7 @@ export default function CalgaryBarbellApp() {
   const total = entries.length;
   const pctDone = total ? Math.round((doneCount / total) * 100) : 0;
 
-  const jumpToToday = () => {
-    if (!startDate) {
-      setSettingsOpen(true);
-      return;
-    }
-    const start = new Date(startDate + "T00:00:00");
-    const now = new Date();
-    const daysSince = Math.floor((now - start) / 86400000);
-    if (daysSince < 0) return;
-    const weekIdx = Math.min(16, Math.floor(daysSince / 7) + 1);
-    const dow = daysSince % 7;
-    const dayIdx = Math.min(4, Math.floor((dow / 7) * 4) + 1);
-    const targetPhase = weekToPhase(weekIdx);
-    setMode("log");
-    setPhase(targetPhase);
-    if (targetPhase === "Taper Week") {
-      setTaperLabel(TAPER_LABELS_SORTED[dayIdx - 1]);
-    } else {
-      setWeek(String(weekIdx));
-      setDay(String(dayIdx));
-    }
-  };
+
 
   const jumpToDayFromOverview = (d) => {
     if (isTaper) setTaperLabel(TAPER_LABELS_SORTED[d - 1]);
@@ -2108,24 +2087,7 @@ export default function CalgaryBarbellApp() {
           </div>
         </div>
         <div className="cb-header-actions" style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <button
-            onClick={jumpToToday}
-            style={{
-              padding: "8px 14px",
-              borderRadius: 6,
-              border: "1px solid #3a3733",
-              background: "#211f1c",
-              color: "#c9c2b6",
-              cursor: "pointer",
-              fontFamily: "'Oswald', sans-serif",
-              fontSize: 12,
-              textTransform: "uppercase",
-              letterSpacing: "0.04em",
-              whiteSpace: "nowrap",
-            }}
-          >
-            Today →
-          </button>
+
           <div style={{ position: "relative" }}>
             <button
               onClick={() => setSettingsOpen((o) => !o)}
