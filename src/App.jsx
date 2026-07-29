@@ -151,27 +151,37 @@ function sessionKey(week, day) {
 const ALL_WEEKS = Array.from({ length: 16 }, (_, i) => i + 1);
 const ALL_DAYS = [1, 2, 3, 4];
 
-/* ============================= STORAGE HELPERS ============================= */
+/* ============================= STORAGE HELPERS =============================
+   Everything is stored in the browser's localStorage, so it persists on
+   whatever device/browser each person is using — no server, no accounts,
+   no shared data between devices. Kept async so every call site elsewhere
+   in the app (which awaits these) didn't need to change. */
+const STORAGE_PREFIX = "cbb_";
 async function storageGet(key, fallback) {
   try {
-    const res = await window.storage.get(key, false);
-    if (res && res.value != null) return JSON.parse(res.value);
+    const raw = localStorage.getItem(STORAGE_PREFIX + key);
+    if (raw != null) return JSON.parse(raw);
   } catch (e) {
-    /* not found -> fallback */
+    /* not found, corrupted, or storage unavailable -> fallback */
   }
   return fallback;
 }
 async function storageSet(key, value) {
   try {
-    await window.storage.set(key, JSON.stringify(value), false);
+    localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(value));
   } catch (e) {
     console.error("storage set failed", e);
   }
 }
 async function storageListPrefix(prefix) {
   try {
-    const res = await window.storage.list(prefix, false);
-    return (res && res.keys) || [];
+    const fullPrefix = STORAGE_PREFIX + prefix;
+    const keys = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith(fullPrefix)) keys.push(k.slice(STORAGE_PREFIX.length));
+    }
+    return keys;
   } catch (e) {
     return [];
   }
@@ -651,8 +661,9 @@ function NotesBox({ value, onChange }) {
   );
 }
 
-function SettingsPanel({ maxesLb, roundToLb, roundToKg, unit, barType, startDate, onChange, open, onClose }) {
+function SettingsPanel({ maxesLb, roundToLb, roundToKg, unit, barType, startDate, onChange, open, onClose, onExportBackup, onImportFile }) {
   if (!open) return null;
+  const fileInputRef = useRef(null);
   const displayMax = (lift) => {
     const raw = maxesLb[lift];
     if (raw == null || raw === "") return "";
@@ -779,6 +790,63 @@ function SettingsPanel({ maxesLb, roundToLb, roundToKg, unit, barType, startDate
           style={{ width: "100%", padding: "6px 8px", background: "#141311", border: "1px solid #3a3733", borderRadius: 3, color: "#f2ede4", fontFamily: "'IBM Plex Mono', monospace", fontSize: 13 }}
         />
         <div style={{ fontSize: 11, color: "#726b5f", marginTop: 4 }}>Used by "Jump to Today" — assumes Week 1 Day 1 starts this week.</div>
+      </div>
+      <div style={{ marginTop: 14, paddingTop: 12, borderTop: "1px solid #3a3733" }}>
+        <label style={{ fontFamily: "'Oswald', sans-serif", fontSize: 13, color: "#a89f90", display: "block", marginBottom: 8 }}>Backup &amp; Restore</label>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button
+            onClick={onExportBackup}
+            style={{
+              flex: 1,
+              padding: "8px 0",
+              background: "transparent",
+              border: "1px solid #3a3733",
+              borderRadius: 3,
+              color: "#c9c2b6",
+              fontFamily: "'Oswald', sans-serif",
+              fontWeight: 600,
+              fontSize: 12,
+              textTransform: "uppercase",
+              letterSpacing: "0.03em",
+              cursor: "pointer",
+            }}
+          >
+            Export
+          </button>
+          <button
+            onClick={() => fileInputRef.current && fileInputRef.current.click()}
+            style={{
+              flex: 1,
+              padding: "8px 0",
+              background: "transparent",
+              border: "1px solid #3a3733",
+              borderRadius: 3,
+              color: "#c9c2b6",
+              fontFamily: "'Oswald', sans-serif",
+              fontWeight: 600,
+              fontSize: 12,
+              textTransform: "uppercase",
+              letterSpacing: "0.03em",
+              cursor: "pointer",
+            }}
+          >
+            Import
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="application/json,.json"
+            style={{ display: "none" }}
+            onChange={(e) => {
+              const file = e.target.files && e.target.files[0];
+              if (file) onImportFile(file);
+              e.target.value = "";
+            }}
+          />
+        </div>
+        <div style={{ fontSize: 11, color: "#726b5f", marginTop: 6 }}>
+          Export a backup file before clearing your browser data or switching devices/browsers — import it here to restore everything.
+        </div>
       </div>
       <button
         onClick={onClose}
@@ -1937,6 +2005,52 @@ export default function CalgaryBarbellApp() {
   const prevWeek = () => goToWeekOverview(Math.max(1, absWeek - 1));
   const nextWeek = () => goToWeekOverview(Math.min(16, absWeek + 1));
 
+  const exportBackup = async () => {
+    const savedSettings = await storageGet("settings", null);
+    const sessions = await loadAllSessions();
+    const payload = {
+      app: "calgary-barbell-16-week",
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      settings: savedSettings,
+      sessions,
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `calgary-barbell-backup-${todayISO()}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const importBackupFile = async (file) => {
+    let data;
+    try {
+      const text = await file.text();
+      data = JSON.parse(text);
+    } catch (e) {
+      window.alert("Could not read that file — make sure it's a backup exported from this app.");
+      return;
+    }
+    if (!data || typeof data !== "object" || (!data.sessions && !data.settings)) {
+      window.alert("That file doesn't look like a valid backup for this app.");
+      return;
+    }
+    const proceed = window.confirm("Importing will overwrite the current data on this device with the contents of this backup. Continue?");
+    if (!proceed) return;
+    if (data.settings) await storageSet("settings", data.settings);
+    if (data.sessions && typeof data.sessions === "object") {
+      for (const key of Object.keys(data.sessions)) {
+        await storageSet(`session:${key}`, data.sessions[key]);
+      }
+    }
+    window.alert("Backup imported. The app will now reload.");
+    window.location.reload();
+  };
+
   return (
     <div
       style={{
@@ -2051,6 +2165,8 @@ export default function CalgaryBarbellApp() {
               }}
               open={settingsOpen}
               onClose={() => setSettingsOpen(false)}
+              onExportBackup={exportBackup}
+              onImportFile={importBackupFile}
             />
           </div>
         </div>
