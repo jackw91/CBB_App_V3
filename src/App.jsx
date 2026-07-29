@@ -2068,8 +2068,7 @@ export default function CalgaryBarbellApp() {
           .cb-app { padding: 14px 10px 130px !important; }
           .cb-title-eyebrow { font-size: 10px !important; letter-spacing: 0.18em !important; }
           .cb-title-main { font-size: 21px !important; }
-          .cb-header { flex-wrap: wrap !important; row-gap: 10px !important; }
-          .cb-header-actions { flex-basis: 100% !important; justify-content: flex-end !important; }
+          .cb-header { flex-wrap: nowrap !important; align-items: center !important; }
           .cb-row { padding: 12px 10px !important; }
           .cb-expand-panel { padding-left: 12px !important; gap: 10px !important; }
           .cb-settings-panel { width: calc(100vw - 56px) !important; max-width: 290px !important; }
