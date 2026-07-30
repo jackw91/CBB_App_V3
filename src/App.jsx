@@ -2230,7 +2230,7 @@ export default function CalgaryBarbellApp() {
         style={{
           display: "none",
           marginTop: 16,
-          gridTemplateColumns: "repeat(5, 1fr)",
+          gridTemplateColumns: "repeat(5, minmax(0, 1fr))",
           gap: 2,
           borderBottom: "1px solid #2a2824",
           paddingBottom: 8,
@@ -2255,6 +2255,8 @@ export default function CalgaryBarbellApp() {
                 background: "transparent",
                 color: isActive ? "#f2ede4" : "#726b5f",
                 cursor: "pointer",
+                minWidth: 0,
+                width: "100%",
               }}
             >
               <NavTabIcon value={m.value} size={26} />
@@ -2267,6 +2269,9 @@ export default function CalgaryBarbellApp() {
                   letterSpacing: "0.02em",
                   whiteSpace: "nowrap",
                   lineHeight: 1,
+                  maxWidth: "100%",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
                 }}
               >
                 {m.shortLabel}
