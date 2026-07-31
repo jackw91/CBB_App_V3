@@ -2411,6 +2411,25 @@ function DebugOverlay({ mode }) {
     const read = () => {
       const appEl = document.querySelector(".cb-app");
       const appRect = appEl ? appEl.getBoundingClientRect() : null;
+
+      const chain = [];
+      let el = appEl ? appEl.parentElement : null;
+      let depth = 0;
+      while (el && depth < 8) {
+        const cs = window.getComputedStyle(el);
+        const r = el.getBoundingClientRect();
+        const cls = el.className && typeof el.className === "string" ? "." + el.className.trim().split(/\s+/).join(".") : "";
+        chain.push({
+          label: el.tagName.toLowerCase() + (el.id ? "#" + el.id : "") + cls,
+          width: Math.round(r.width),
+          display: cs.display,
+          maxWidth: cs.maxWidth,
+          transform: cs.transform && cs.transform !== "none" ? cs.transform : "",
+        });
+        el = el.parentElement;
+        depth++;
+      }
+
       setStats({
         mode,
         innerWidth: window.innerWidth,
@@ -2423,6 +2442,7 @@ function DebugOverlay({ mode }) {
         appLeft: appRect ? Math.round(appRect.left) : null,
         appRight: appRect ? Math.round(appRect.right) : null,
         appWidth: appRect ? Math.round(appRect.width) : null,
+        chain,
       });
     };
     read();
@@ -2445,19 +2465,29 @@ function DebugOverlay({ mode }) {
         left: 0,
         right: 0,
         zIndex: 999999,
-        background: "rgba(0,0,0,0.88)",
+        maxHeight: "45vh",
+        overflowY: "auto",
+        background: "rgba(0,0,0,0.92)",
         color: "#5fef7a",
         fontFamily: "monospace",
-        fontSize: 10,
+        fontSize: 9,
         lineHeight: 1.4,
         padding: "4px 6px",
-        pointerEvents: "none",
-        whiteSpace: "pre",
+        pointerEvents: "auto",
       }}
     >
-      {`tab=${stats.mode} innerW=${stats.innerWidth} docClientW=${stats.docClientWidth} docScrollW=${stats.docScrollWidth} bodyScrollW=${stats.bodyScrollWidth}
+      <div style={{ whiteSpace: "pre-wrap" }}>
+        {`tab=${stats.mode} innerW=${stats.innerWidth} docClientW=${stats.docClientWidth} docScrollW=${stats.docScrollWidth} bodyScrollW=${stats.bodyScrollWidth}
 vvWidth=${stats.vvWidth} vvScale=${stats.vvScale} dpr=${stats.dpr}
-appLeft=${stats.appLeft} appRight=${stats.appRight} appWidth=${stats.appWidth}`}
+.cb-app => left=${stats.appLeft} right=${stats.appRight} width=${stats.appWidth}`}
+      </div>
+      <div style={{ marginTop: 4, borderTop: "1px solid #333", paddingTop: 3 }}>
+        {stats.chain.map((c, i) => (
+          <div key={i} style={{ color: "#ffd166", whiteSpace: "pre-wrap" }}>
+            {`#${i} ${c.label} | w=${c.width} display=${c.display} maxW=${c.maxWidth}${c.transform ? " transform=" + c.transform : ""}`}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
