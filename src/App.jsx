@@ -2395,6 +2395,69 @@ export default function CalgaryBarbellApp() {
           onClose={() => setHistoryExercise(null)}
         />
       )}
+
+      {/* TEMPORARY diagnostic overlay — safe to delete once the mobile
+          compression issue is tracked down. Shows live viewport/overflow
+          numbers directly on screen so they can be read off a real phone
+          without needing DevTools. */}
+      <DebugOverlay mode={mode} />
+    </div>
+  );
+}
+
+function DebugOverlay({ mode }) {
+  const [stats, setStats] = useState(null);
+  useEffect(() => {
+    const read = () => {
+      const appEl = document.querySelector(".cb-app");
+      const appRect = appEl ? appEl.getBoundingClientRect() : null;
+      setStats({
+        mode,
+        innerWidth: window.innerWidth,
+        docClientWidth: document.documentElement.clientWidth,
+        docScrollWidth: document.documentElement.scrollWidth,
+        bodyScrollWidth: document.body.scrollWidth,
+        vvWidth: window.visualViewport ? Math.round(window.visualViewport.width) : null,
+        vvScale: window.visualViewport ? Math.round(window.visualViewport.scale * 1000) / 1000 : null,
+        dpr: window.devicePixelRatio,
+        appLeft: appRect ? Math.round(appRect.left) : null,
+        appRight: appRect ? Math.round(appRect.right) : null,
+        appWidth: appRect ? Math.round(appRect.width) : null,
+      });
+    };
+    read();
+    const id = setInterval(read, 400);
+    window.addEventListener("resize", read);
+    if (window.visualViewport) window.visualViewport.addEventListener("resize", read);
+    return () => {
+      clearInterval(id);
+      window.removeEventListener("resize", read);
+      if (window.visualViewport) window.visualViewport.removeEventListener("resize", read);
+    };
+  }, [mode]);
+
+  if (!stats) return null;
+  return (
+    <div
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 999999,
+        background: "rgba(0,0,0,0.88)",
+        color: "#5fef7a",
+        fontFamily: "monospace",
+        fontSize: 10,
+        lineHeight: 1.4,
+        padding: "4px 6px",
+        pointerEvents: "none",
+        whiteSpace: "pre",
+      }}
+    >
+      {`tab=${stats.mode} innerW=${stats.innerWidth} docClientW=${stats.docClientWidth} docScrollW=${stats.docScrollWidth} bodyScrollW=${stats.bodyScrollWidth}
+vvWidth=${stats.vvWidth} vvScale=${stats.vvScale} dpr=${stats.dpr}
+appLeft=${stats.appLeft} appRight=${stats.appRight} appWidth=${stats.appWidth}`}
     </div>
   );
 }
