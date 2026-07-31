@@ -351,6 +351,70 @@ function unitLabel(unit) {
   return unit === "kg" ? "kg" : "lb";
 }
 
+/* Shared list of the five main app sections, used by both the desktop
+   text tabs and the mobile icon+label tabs so the two stay in sync. */
+const NAV_TABS = [
+  { value: "overview", label: "Week Overview", shortLabel: "Overview" },
+  { value: "log", label: "Log", shortLabel: "Log" },
+  { value: "program", label: "View the Program", shortLabel: "Program" },
+  { value: "calendar", label: "Calendar", shortLabel: "Calendar" },
+  { value: "insights", label: "Insights", shortLabel: "Insights" },
+];
+
+/* Simple line icons (stroke only, no fill) matching the weight of the
+   gear/chevron/checkmark icons already used elsewhere in the app. */
+function NavTabIcon({ value, size = 20 }) {
+  const common = { width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" };
+  switch (value) {
+    case "overview":
+      return (
+        <svg {...common}>
+          <rect x="4" y="4" width="7" height="7" rx="1.2" />
+          <rect x="13" y="4" width="7" height="7" rx="1.2" />
+          <rect x="4" y="13" width="7" height="7" rx="1.2" />
+          <rect x="13" y="13" width="7" height="7" rx="1.2" />
+        </svg>
+      );
+    case "log":
+      return (
+        <svg {...common}>
+          <rect x="5" y="4" width="14" height="17" rx="2" />
+          <rect x="9" y="2" width="6" height="4" rx="1" />
+          <path d="M8.5 13l2.5 2.5L15.5 10" />
+        </svg>
+      );
+    case "program":
+      return (
+        <svg {...common}>
+          <line x1="4" y1="6" x2="20" y2="6" />
+          <line x1="4" y1="12" x2="20" y2="12" />
+          <line x1="4" y1="18" x2="14" y2="18" />
+        </svg>
+      );
+    case "calendar":
+      return (
+        <svg {...common}>
+          <rect x="3" y="5" width="18" height="16" rx="2" />
+          <line x1="3" y1="9.5" x2="21" y2="9.5" />
+          <line x1="8" y1="3" x2="8" y2="7" />
+          <line x1="16" y1="3" x2="16" y2="7" />
+        </svg>
+      );
+    case "insights":
+      return (
+        <svg {...common}>
+          <path d="M4 17l5-6 4 4 7-9" />
+          <circle cx="4" cy="17" r="1.1" fill="currentColor" stroke="none" />
+          <circle cx="9" cy="11" r="1.1" fill="currentColor" stroke="none" />
+          <circle cx="13" cy="15" r="1.1" fill="currentColor" stroke="none" />
+          <circle cx="20" cy="6" r="1.1" fill="currentColor" stroke="none" />
+        </svg>
+      );
+    default:
+      return null;
+  }
+}
+
 function CollapsibleSection({ title, defaultOpen = true, children }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
@@ -2073,6 +2137,8 @@ export default function CalgaryBarbellApp() {
           .cb-expand-panel { padding-left: 12px !important; gap: 10px !important; }
           .cb-settings-panel { width: calc(100vw - 56px) !important; max-width: 290px !important; }
           .cb-pr-grid { grid-template-columns: 1fr !important; }
+          .cb-tabnav-desktop { display: none !important; }
+          .cb-tabnav-mobile { display: grid !important; }
         }
       `}</style>
 
@@ -2133,14 +2199,9 @@ export default function CalgaryBarbellApp() {
         </div>
       </div>
 
-      <div style={{ marginTop: 20, display: "flex", gap: 6, flexWrap: "wrap", rowGap: 8, borderBottom: "1px solid #2a2824", paddingBottom: 10 }}>
-        {[
-          { value: "overview", label: "Week Overview" },
-          { value: "log", label: "Log" },
-          { value: "program", label: "View the Program" },
-          { value: "calendar", label: "Calendar" },
-          { value: "insights", label: "Insights" },
-        ].map((m) => (
+      {/* Text tabs — shown on regular/desktop widths */}
+      <div className="cb-tabnav-desktop" style={{ marginTop: 20, display: "flex", gap: 6, flexWrap: "wrap", rowGap: 10, borderBottom: "1px solid #2a2824", paddingBottom: 10 }}>
+        {NAV_TABS.map((m) => (
           <button
             key={m.value}
             onClick={() => setMode(m.value)}
@@ -2152,7 +2213,7 @@ export default function CalgaryBarbellApp() {
               background: "transparent",
               color: mode === m.value ? "#f2ede4" : "#726b5f",
               fontFamily: "'Oswald', sans-serif",
-              fontSize: 13,
+              fontSize: 16,
               textTransform: "uppercase",
               letterSpacing: "0.05em",
               cursor: "pointer",
@@ -2161,6 +2222,63 @@ export default function CalgaryBarbellApp() {
             {m.label}
           </button>
         ))}
+      </div>
+
+      {/* Icon + label tabs — shown on mobile widths instead of the text row above */}
+      <div
+        className="cb-tabnav-mobile"
+        style={{
+          display: "none",
+          marginTop: 16,
+          gridTemplateColumns: "repeat(5, minmax(0, 1fr))",
+          gap: 2,
+          borderBottom: "1px solid #2a2824",
+          paddingBottom: 8,
+        }}
+      >
+        {NAV_TABS.map((m) => {
+          const isActive = mode === m.value;
+          return (
+            <button
+              key={m.value}
+              onClick={() => setMode(m.value)}
+              aria-label={m.label}
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "flex-start",
+                gap: 4,
+                padding: "8px 2px 8px",
+                border: "none",
+                borderBottom: isActive ? "2px solid #c8553d" : "2px solid transparent",
+                background: "transparent",
+                color: isActive ? "#f2ede4" : "#726b5f",
+                cursor: "pointer",
+                minWidth: 0,
+                width: "100%",
+              }}
+            >
+              <NavTabIcon value={m.value} size={26} />
+              <span
+                style={{
+                  fontFamily: "'Oswald', sans-serif",
+                  fontSize: 13,
+                  fontWeight: 600,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.02em",
+                  whiteSpace: "nowrap",
+                  lineHeight: 1,
+                  maxWidth: "100%",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                }}
+              >
+                {m.shortLabel}
+              </span>
+            </button>
+          );
+        })}
       </div>
 
       {mode === "log" && (
