@@ -2105,6 +2105,8 @@ export default function CalgaryBarbellApp() {
         borderRadius: 8,
         position: "relative",
         maxWidth: "100%",
+        width: "100%",
+        boxSizing: "border-box",
         overflowX: "hidden",
       }}
       className="cb-app"
@@ -2395,99 +2397,6 @@ export default function CalgaryBarbellApp() {
           onClose={() => setHistoryExercise(null)}
         />
       )}
-
-      {/* TEMPORARY diagnostic overlay — safe to delete once the mobile
-          compression issue is tracked down. Shows live viewport/overflow
-          numbers directly on screen so they can be read off a real phone
-          without needing DevTools. */}
-      <DebugOverlay mode={mode} />
-    </div>
-  );
-}
-
-function DebugOverlay({ mode }) {
-  const [stats, setStats] = useState(null);
-  useEffect(() => {
-    const read = () => {
-      const appEl = document.querySelector(".cb-app");
-      const appRect = appEl ? appEl.getBoundingClientRect() : null;
-
-      const chain = [];
-      let el = appEl ? appEl.parentElement : null;
-      let depth = 0;
-      while (el && depth < 8) {
-        const cs = window.getComputedStyle(el);
-        const r = el.getBoundingClientRect();
-        const cls = el.className && typeof el.className === "string" ? "." + el.className.trim().split(/\s+/).join(".") : "";
-        chain.push({
-          label: el.tagName.toLowerCase() + (el.id ? "#" + el.id : "") + cls,
-          width: Math.round(r.width),
-          display: cs.display,
-          maxWidth: cs.maxWidth,
-          transform: cs.transform && cs.transform !== "none" ? cs.transform : "",
-        });
-        el = el.parentElement;
-        depth++;
-      }
-
-      setStats({
-        mode,
-        innerWidth: window.innerWidth,
-        docClientWidth: document.documentElement.clientWidth,
-        docScrollWidth: document.documentElement.scrollWidth,
-        bodyScrollWidth: document.body.scrollWidth,
-        vvWidth: window.visualViewport ? Math.round(window.visualViewport.width) : null,
-        vvScale: window.visualViewport ? Math.round(window.visualViewport.scale * 1000) / 1000 : null,
-        dpr: window.devicePixelRatio,
-        appLeft: appRect ? Math.round(appRect.left) : null,
-        appRight: appRect ? Math.round(appRect.right) : null,
-        appWidth: appRect ? Math.round(appRect.width) : null,
-        chain,
-      });
-    };
-    read();
-    const id = setInterval(read, 400);
-    window.addEventListener("resize", read);
-    if (window.visualViewport) window.visualViewport.addEventListener("resize", read);
-    return () => {
-      clearInterval(id);
-      window.removeEventListener("resize", read);
-      if (window.visualViewport) window.visualViewport.removeEventListener("resize", read);
-    };
-  }, [mode]);
-
-  if (!stats) return null;
-  return (
-    <div
-      style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        right: 0,
-        zIndex: 999999,
-        maxHeight: "45vh",
-        overflowY: "auto",
-        background: "rgba(0,0,0,0.92)",
-        color: "#5fef7a",
-        fontFamily: "monospace",
-        fontSize: 9,
-        lineHeight: 1.4,
-        padding: "4px 6px",
-        pointerEvents: "auto",
-      }}
-    >
-      <div style={{ whiteSpace: "pre-wrap" }}>
-        {`tab=${stats.mode} innerW=${stats.innerWidth} docClientW=${stats.docClientWidth} docScrollW=${stats.docScrollWidth} bodyScrollW=${stats.bodyScrollWidth}
-vvWidth=${stats.vvWidth} vvScale=${stats.vvScale} dpr=${stats.dpr}
-.cb-app => left=${stats.appLeft} right=${stats.appRight} width=${stats.appWidth}`}
-      </div>
-      <div style={{ marginTop: 4, borderTop: "1px solid #333", paddingTop: 3 }}>
-        {stats.chain.map((c, i) => (
-          <div key={i} style={{ color: "#ffd166", whiteSpace: "pre-wrap" }}>
-            {`#${i} ${c.label} | w=${c.width} display=${c.display} maxW=${c.maxWidth}${c.transform ? " transform=" + c.transform : ""}`}
-          </div>
-        ))}
-      </div>
     </div>
   );
 }
