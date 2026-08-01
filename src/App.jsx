@@ -659,20 +659,33 @@ function ExerciseRow({ entry, idx, setStates, onToggleSet, log, onLogChange, exp
           </span>
         </div>
 
-        <div className="cb-row-bottom" style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", marginTop: 10, gap: 4 }}>
+        <div className="cb-row-bottom" style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", marginTop: 10, gap: 14 }}>
           <div className="cb-load" style={{ flex: 1, minWidth: 0, textAlign: "right" }}>
             <LoadDisplay entry={entry} maxesLb={maxesLb} unit={unit} roundToLb={roundToLb} roundToKg={roundToKg} barType={barType} />
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
             {onOpenHistory && (
               <button
+                className="cb-icon-btn"
                 onClick={(e) => {
                   e.stopPropagation();
                   onOpenHistory(entry.exercise);
                 }}
                 aria-label="View history for this exercise"
                 title="History"
-                style={{ background: "transparent", border: "none", color: "#726b5f", cursor: "pointer", padding: 4, flexShrink: 0 }}
+                style={{
+                  width: 34,
+                  height: 34,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  background: "#1a1815",
+                  border: "1px solid #3a3733",
+                  borderRadius: "50%",
+                  color: "#a89f90",
+                  cursor: "pointer",
+                  flexShrink: 0,
+                }}
               >
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <circle cx="12" cy="12" r="9" />
@@ -681,12 +694,25 @@ function ExerciseRow({ entry, idx, setStates, onToggleSet, log, onLogChange, exp
               </button>
             )}
             <button
+              className="cb-icon-btn"
               onClick={(e) => {
                 e.stopPropagation();
                 onToggleExpand(idx);
               }}
               aria-label="Log actual performance"
-              style={{ background: "transparent", border: "none", color: "#726b5f", cursor: "pointer", padding: 4, flexShrink: 0 }}
+              style={{
+                width: 34,
+                height: 34,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                background: "#1a1815",
+                border: "1px solid #3a3733",
+                borderRadius: "50%",
+                color: "#a89f90",
+                cursor: "pointer",
+                flexShrink: 0,
+              }}
             >
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ transform: expanded ? "rotate(180deg)" : "none", transition: "transform 0.15s" }}>
                 <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
@@ -2263,6 +2289,9 @@ export default function CalgaryBarbellApp() {
           .cb-set-box { width: 44px !important; height: 44px !important; border-radius: 7px !important; }
           .cb-set-box svg { width: 20px !important; height: 20px !important; }
           .cb-set-box span { font-size: 14px !important; }
+          .cb-row-bottom { gap: 18px !important; }
+          .cb-row-bottom > div:last-child { gap: 14px !important; }
+          .cb-icon-btn { width: 40px !important; height: 40px !important; }
         }
       `}</style>
 
