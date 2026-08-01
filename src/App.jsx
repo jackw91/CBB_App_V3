@@ -554,9 +554,8 @@ function ExerciseRow({ entry, idx, setStates, onToggleSet, log, onLogChange, exp
         className="cb-row"
         style={{
           padding: "14px 16px",
-          background: done ? "rgba(127,174,122,0.16)" : "transparent",
           borderLeft: done ? "3px solid #4a8752" : "3px solid transparent",
-          transition: "background 0.15s ease, border-color 0.15s ease",
+          transition: "border-color 0.15s ease",
         }}
       >
         <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", rowGap: 4 }}>
@@ -1133,6 +1132,78 @@ function RestTimerBar({ timer, onDismiss, onExtend }) {
   );
 }
 
+/* ============================= WORKOUT COMPLETE OVERLAY ============================= */
+function WorkoutCompleteOverlay({ label, onBackToOverview, onDismiss }) {
+  return (
+    <div
+      onClick={onDismiss}
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 85,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 18,
+        cursor: "pointer",
+        background: "rgba(15,23,16,0.97)",
+        textAlign: "center",
+        padding: 24,
+      }}
+    >
+      <span style={{ width: 84, height: 84, borderRadius: "50%", background: "#7fae7a", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="#0f1710" strokeWidth="3">
+          <path d="M4 12.5l5 5L20 6" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </span>
+      <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 30, fontWeight: 700, color: "#f2ede4", textTransform: "uppercase", letterSpacing: "0.04em" }}>Workout Complete</div>
+      {label && <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 16, color: "#c9c2b6", maxWidth: 320 }}>{label}</div>}
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onBackToOverview();
+        }}
+        style={{
+          marginTop: 10,
+          background: "#7fae7a",
+          border: "none",
+          borderRadius: 8,
+          color: "#0f1710",
+          fontFamily: "'Oswald', sans-serif",
+          fontWeight: 700,
+          fontSize: 15,
+          textTransform: "uppercase",
+          letterSpacing: "0.04em",
+          padding: "14px 32px",
+          cursor: "pointer",
+        }}
+      >
+        Back to Overview
+      </button>
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onDismiss();
+        }}
+        style={{
+          background: "transparent",
+          border: "none",
+          color: "#a89f90",
+          fontFamily: "'IBM Plex Mono', monospace",
+          fontSize: 13,
+          textDecoration: "underline",
+          cursor: "pointer",
+          padding: "4px 8px",
+        }}
+      >
+        Stay here
+      </button>
+      <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "#726b5f", marginTop: 4 }}>Tap anywhere to dismiss</div>
+    </div>
+  );
+}
+
 /* ============================= WEEK OVERVIEW (main page) ============================= */
 function WeekOverview({ week, allSessions, nextWorkout, maxesLb, unit, roundToLb, roundToKg, barType, onJumpToDay, onPrevWeek, onNextWeek }) {
   const isTaperWeek = Number(week) === 16;
@@ -1171,7 +1242,7 @@ function WeekOverview({ week, allSessions, nextWorkout, maxesLb, unit, roundToLb
         <button
           onClick={onPrevWeek}
           disabled={Number(week) <= 1}
-          style={{ background: "transparent", border: "1px solid #3a3733", borderRadius: 4, color: Number(week) <= 1 ? "#3a3733" : "#c9c2b6", padding: "6px 10px", cursor: Number(week) <= 1 ? "default" : "pointer" }}
+          style={{ background: "transparent", border: "1px solid #3a3733", borderRadius: 6, color: Number(week) <= 1 ? "#3a3733" : "#c9c2b6", padding: "10px 16px", fontSize: 20, lineHeight: 1, cursor: Number(week) <= 1 ? "default" : "pointer" }}
         >
           ‹
         </button>
@@ -1182,7 +1253,7 @@ function WeekOverview({ week, allSessions, nextWorkout, maxesLb, unit, roundToLb
         <button
           onClick={onNextWeek}
           disabled={Number(week) >= 16}
-          style={{ background: "transparent", border: "1px solid #3a3733", borderRadius: 4, color: Number(week) >= 16 ? "#3a3733" : "#c9c2b6", padding: "6px 10px", cursor: Number(week) >= 16 ? "default" : "pointer" }}
+          style={{ background: "transparent", border: "1px solid #3a3733", borderRadius: 6, color: Number(week) >= 16 ? "#3a3733" : "#c9c2b6", padding: "10px 16px", fontSize: 20, lineHeight: 1, cursor: Number(week) >= 16 ? "default" : "pointer" }}
         >
           ›
         </button>
@@ -1268,13 +1339,13 @@ function WeekOverview({ week, allSessions, nextWorkout, maxesLb, unit, roundToLb
                     style={{
                       background: "transparent",
                       border: "1px solid #3a3733",
-                      borderRadius: 4,
+                      borderRadius: 6,
                       color: "#c9c2b6",
                       fontFamily: "'Oswald', sans-serif",
-                      fontSize: 11,
+                      fontSize: 13,
                       textTransform: "uppercase",
                       letterSpacing: "0.04em",
-                      padding: "6px 10px",
+                      padding: "10px 16px",
                       cursor: "pointer",
                     }}
                   >
@@ -1831,11 +1902,11 @@ function CalendarView({ sessions, loadingData, onJumpToSession }) {
   return (
     <div style={{ marginTop: 18 }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-        <button onClick={() => changeMonth(-1)} style={{ background: "transparent", border: "1px solid #3a3733", borderRadius: 4, color: "#c9c2b6", padding: "6px 10px", cursor: "pointer" }}>
+        <button onClick={() => changeMonth(-1)} style={{ background: "transparent", border: "1px solid #3a3733", borderRadius: 6, color: "#c9c2b6", padding: "10px 16px", fontSize: 20, lineHeight: 1, cursor: "pointer" }}>
           ‹
         </button>
         <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 15, fontWeight: 600, color: "#e8d9c5", textTransform: "uppercase", letterSpacing: "0.04em" }}>{monthName}</div>
-        <button onClick={() => changeMonth(1)} style={{ background: "transparent", border: "1px solid #3a3733", borderRadius: 4, color: "#c9c2b6", padding: "6px 10px", cursor: "pointer" }}>
+        <button onClick={() => changeMonth(1)} style={{ background: "transparent", border: "1px solid #3a3733", borderRadius: 6, color: "#c9c2b6", padding: "10px 16px", fontSize: 20, lineHeight: 1, cursor: "pointer" }}>
           ›
         </button>
       </div>
@@ -1913,6 +1984,7 @@ export default function CalgaryBarbellApp() {
   const [session, setSession] = useState(EMPTY_SESSION());
   const [expandedIdx, setExpandedIdx] = useState(null);
   const [timer, setTimer] = useState(null); // { label, endAt, duration }
+  const [showWorkoutComplete, setShowWorkoutComplete] = useState(false);
   const [allSessions, setAllSessions] = useState({}); // "week:day" -> session, across the whole program
   const [loadingHistory, setLoadingHistory] = useState(true);
   const [historyExercise, setHistoryExercise] = useState(null); // exercise name for drill-down modal
@@ -1971,6 +2043,7 @@ export default function CalgaryBarbellApp() {
   useEffect(() => {
     let cancelled = false;
     setExpandedIdx(null);
+    setShowWorkoutComplete(false);
     (async () => {
       const saved = await storageGet(skey, null);
       if (!cancelled) setSession(saved || EMPTY_SESSION());
@@ -1998,6 +2071,7 @@ export default function CalgaryBarbellApp() {
       next[setIdx] = nowChecked;
       const nextSession = { ...session, completion: { ...session.completion, [idx]: next } };
       if (next.every(Boolean) && !nextSession.date) nextSession.date = todayISO();
+      const wasComplete = isDayComplete(entries, session);
       persistSession(nextSession);
       if (nowChecked) {
         const restSec = Number(entry?.rest);
@@ -2005,6 +2079,9 @@ export default function CalgaryBarbellApp() {
           primeAudioCtx();
           setTimer({ label: entry.exercise, endAt: Date.now() + restSec * 1000, duration: restSec });
         }
+      }
+      if (!wasComplete && isDayComplete(entries, nextSession)) {
+        setShowWorkoutComplete(true);
       }
     },
     [session, persistSession, entries]
@@ -2333,7 +2410,7 @@ export default function CalgaryBarbellApp() {
           <div style={{ marginTop: 16, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", rowGap: 8 }}>
             <button
               onClick={() => setMode("overview")}
-              style={{ background: "transparent", border: "none", color: "#726b5f", cursor: "pointer", fontFamily: "'Oswald', sans-serif", fontSize: 12, textTransform: "uppercase", letterSpacing: "0.04em", padding: 0 }}
+              style={{ background: "transparent", border: "none", color: "#726b5f", cursor: "pointer", fontFamily: "'Oswald', sans-serif", fontSize: 15, textTransform: "uppercase", letterSpacing: "0.04em", padding: "10px 8px", margin: "-10px -8px" }}
             >
               ‹ Week Overview
             </button>
@@ -2431,6 +2508,17 @@ export default function CalgaryBarbellApp() {
         onDismiss={() => setTimer(null)}
         onExtend={() => setTimer((t) => (t ? { ...t, endAt: t.endAt + 30000, duration: t.duration + 30 } : t))}
       />
+
+      {showWorkoutComplete && (
+        <WorkoutCompleteOverlay
+          label={isTaper ? taperLabel.replace(/ from Competition/i, "") : `Week ${week} · Day ${day}`}
+          onBackToOverview={() => {
+            setShowWorkoutComplete(false);
+            setMode("overview");
+          }}
+          onDismiss={() => setShowWorkoutComplete(false)}
+        />
+      )}
 
       {historyExercise && (
         <ExerciseHistoryModal
