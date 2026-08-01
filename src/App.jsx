@@ -1404,7 +1404,7 @@ const EXERCISE_FILTER_OPTIONS = [
   { key: "squat", label: "Squat", color: LIFT_META.squat.color },
   { key: "bench", label: "Bench", color: LIFT_META.bench.color },
   { key: "deadlift", label: "Deadlift", color: LIFT_META.deadlift.color },
-  { key: "none", label: "No Pill", color: null },
+  { key: "none", label: "Accessory", color: null },
 ];
 
 const EXERCISE_GROUP_ORDER = [
@@ -1517,24 +1517,53 @@ function ExercisesView({ onOpenHistory }) {
     return EXERCISE_GROUP_ORDER.map((g) => ({ ...g, items: byKey[g.key] })).filter((g) => g.items.length > 0);
   }, [visibleExercises]);
 
+  const isSearchOrFilterActive = search.trim() !== "" || activeFilters.size > 0;
+
   return (
     <div style={{ marginTop: 16 }}>
-      <input
-        type="text"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        placeholder="Search exercises…"
-        style={{
-          width: "100%",
-          padding: "10px 12px",
-          background: "#1a1815",
-          border: "1px solid #3a3733",
-          borderRadius: 6,
-          color: "#f2ede4",
-          fontFamily: "'IBM Plex Mono', monospace",
-          fontSize: 14,
-        }}
-      />
+      <div style={{ position: "relative" }}>
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search exercises…"
+          style={{
+            width: "100%",
+            padding: search ? "10px 40px 10px 12px" : "10px 12px",
+            background: "#1a1815",
+            border: "1px solid #3a3733",
+            borderRadius: 6,
+            color: "#f2ede4",
+            fontFamily: "'IBM Plex Mono', monospace",
+            fontSize: 14,
+          }}
+        />
+        {search && (
+          <button
+            onClick={() => setSearch("")}
+            aria-label="Clear search"
+            style={{
+              position: "absolute",
+              top: "50%",
+              right: 6,
+              transform: "translateY(-50%)",
+              width: 30,
+              height: 30,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              background: "transparent",
+              border: "none",
+              color: "#a89f90",
+              fontSize: 20,
+              lineHeight: 1,
+              cursor: "pointer",
+            }}
+          >
+            ×
+          </button>
+        )}
+      </div>
 
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 12 }}>
         {EXERCISE_FILTER_OPTIONS.map((opt) => {
@@ -1579,7 +1608,7 @@ function ExercisesView({ onOpenHistory }) {
           </div>
         ) : (
           groups.map((group) => {
-            const isOpen = !collapsedGroups.has(group.key);
+            const isOpen = isSearchOrFilterActive || !collapsedGroups.has(group.key);
             return (
               <div key={group.key}>
                 <div
