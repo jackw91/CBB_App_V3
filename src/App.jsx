@@ -1480,9 +1480,19 @@ function ExerciseCard({ exercise, lift, onOpenHistory }) {
 function ExercisesView({ onOpenHistory }) {
   const [search, setSearch] = useState("");
   const [activeFilters, setActiveFilters] = useState(() => new Set());
+  const [collapsedGroups, setCollapsedGroups] = useState(() => new Set(EXERCISE_GROUP_ORDER.map((g) => g.key)));
 
   const toggleFilter = (key) => {
     setActiveFilters((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
+
+  const toggleGroup = (key) => {
+    setCollapsedGroups((prev) => {
       const next = new Set(prev);
       if (next.has(key)) next.delete(key);
       else next.add(key);
@@ -1568,26 +1578,56 @@ function ExercisesView({ onOpenHistory }) {
             No exercises match your search or filters.
           </div>
         ) : (
-          groups.map((group) => (
-            <div key={group.key}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10, paddingBottom: 8, borderBottom: "1px solid #2a2824" }}>
-                {group.color ? (
-                  <span style={{ width: 9, height: 9, borderRadius: "50%", background: group.color, flexShrink: 0 }} />
-                ) : (
-                  <span style={{ width: 9, height: 9, borderRadius: "50%", border: "1.5px solid #5a564d", flexShrink: 0 }} />
+          groups.map((group) => {
+            const isOpen = !collapsedGroups.has(group.key);
+            return (
+              <div key={group.key}>
+                <div
+                  onClick={() => toggleGroup(group.key)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 8,
+                    marginBottom: isOpen ? 10 : 0,
+                    paddingBottom: 8,
+                    borderBottom: "1px solid #2a2824",
+                    cursor: "pointer",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    {group.color ? (
+                      <span style={{ width: 9, height: 9, borderRadius: "50%", background: group.color, flexShrink: 0 }} />
+                    ) : (
+                      <span style={{ width: 9, height: 9, borderRadius: "50%", border: "1.5px solid #5a564d", flexShrink: 0 }} />
+                    )}
+                    <span style={{ fontFamily: "'Oswald', sans-serif", fontSize: 13, textTransform: "uppercase", letterSpacing: "0.08em", color: "#a89f90", fontWeight: 600 }}>
+                      {group.label}
+                    </span>
+                    <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: "#726b5f" }}>{group.items.length}</span>
+                  </div>
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#726b5f"
+                    strokeWidth="2"
+                    style={{ transform: isOpen ? "rotate(180deg)" : "none", transition: "transform 0.15s", flexShrink: 0 }}
+                  >
+                    <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </div>
+                {isOpen && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                    {group.items.map(({ exercise, lift }) => (
+                      <ExerciseCard key={exercise} exercise={exercise} lift={lift} onOpenHistory={onOpenHistory} />
+                    ))}
+                  </div>
                 )}
-                <span style={{ fontFamily: "'Oswald', sans-serif", fontSize: 13, textTransform: "uppercase", letterSpacing: "0.08em", color: "#a89f90", fontWeight: 600 }}>
-                  {group.label}
-                </span>
-                <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: "#726b5f" }}>{group.items.length}</span>
               </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                {group.items.map(({ exercise, lift }) => (
-                  <ExerciseCard key={exercise} exercise={exercise} lift={lift} onOpenHistory={onOpenHistory} />
-                ))}
-              </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
     </div>
