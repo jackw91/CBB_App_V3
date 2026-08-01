@@ -633,8 +633,8 @@ function ExerciseRow({ entry, idx, setStates, onToggleSet, log, onLogChange, exp
               onClick={() => onToggleSet(idx, si)}
               aria-label={`Set ${si + 1} of ${totalSets}`}
               style={{
-                width: 32,
-                height: 32,
+                width: 29,
+                height: 29,
                 borderRadius: 5,
                 border: `2px solid ${checked ? "#e8d9c5" : "#5a564d"}`,
                 background: checked ? "#e8d9c5" : "transparent",
@@ -646,11 +646,11 @@ function ExerciseRow({ entry, idx, setStates, onToggleSet, log, onLogChange, exp
               }}
             >
               {checked ? (
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1c1a17" strokeWidth="3.5">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#1c1a17" strokeWidth="3.5">
                   <path d="M4 12.5l5 5L20 6" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               ) : (
-                <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: "#726b5f" }}>{si + 1}</span>
+                <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "#726b5f" }}>{si + 1}</span>
               )}
             </div>
           ))}
@@ -2286,9 +2286,9 @@ export default function CalgaryBarbellApp() {
           .cb-pr-grid { grid-template-columns: 1fr !important; }
           .cb-tabnav-desktop { display: none !important; }
           .cb-tabnav-mobile { display: grid !important; }
-          .cb-set-box { width: 44px !important; height: 44px !important; border-radius: 7px !important; }
-          .cb-set-box svg { width: 20px !important; height: 20px !important; }
-          .cb-set-box span { font-size: 14px !important; }
+          .cb-set-box { width: 40px !important; height: 40px !important; border-radius: 6px !important; }
+          .cb-set-box svg { width: 18px !important; height: 18px !important; }
+          .cb-set-box span { font-size: 13px !important; }
           .cb-row-bottom { gap: 18px !important; }
           .cb-row-bottom > div:last-child { gap: 14px !important; }
           .cb-icon-btn { width: 40px !important; height: 40px !important; }
