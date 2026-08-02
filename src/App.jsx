@@ -634,8 +634,8 @@ function ExerciseRow({ entry, idx, setStates, onToggleSet, log, onLogChange, exp
                 width: 29,
                 height: 29,
                 borderRadius: 5,
-                border: `2px solid ${checked ? "#e8d9c5" : "#5a564d"}`,
-                background: checked ? "#e8d9c5" : "transparent",
+                border: `2px solid ${checked ? (done ? "#4a8752" : "#e8d9c5") : "#5a564d"}`,
+                background: checked ? (done ? "#4a8752" : "#e8d9c5") : "transparent",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -644,7 +644,7 @@ function ExerciseRow({ entry, idx, setStates, onToggleSet, log, onLogChange, exp
               }}
             >
               {checked ? (
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#1c1a17" strokeWidth="3.5">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={done ? "#0f1710" : "#1c1a17"} strokeWidth="3.5">
                   <path d="M4 12.5l5 5L20 6" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               ) : (
