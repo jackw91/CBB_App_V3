@@ -502,7 +502,7 @@ function LoadDisplay({ entry, maxesLb, unit, roundToLb, roundToKg, barType }) {
 /* small numeric input used in the log-expand panel */
 function LogField({ label, value, onChange, step, placeholder }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 4, flex: "1 1 0", minWidth: 0 }}>
       <span style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.08em", color: "#726b5f", fontFamily: "'Oswald', sans-serif" }}>
         {label}
       </span>
@@ -514,14 +514,15 @@ function LogField({ label, value, onChange, step, placeholder }) {
         onChange={(e) => onChange(e.target.value === "" ? null : Number(e.target.value))}
         onClick={(e) => e.stopPropagation()}
         style={{
-          width: 78,
-          padding: "6px 8px",
+          width: "100%",
+          minWidth: 0,
+          padding: "12px 10px",
           background: "#141311",
           border: "1px solid #3a3733",
-          borderRadius: 3,
+          borderRadius: 5,
           color: "#f2ede4",
           fontFamily: "'IBM Plex Mono', monospace",
-          fontSize: 13,
+          fontSize: 16,
         }}
       />
     </div>
@@ -751,7 +752,7 @@ function ExerciseRow({ entry, idx, setStates, onToggleSet, log, onLogChange, exp
               <span style={{ fontSize: 12, fontFamily: "'IBM Plex Mono', monospace", color: "#a89f90" }}>Hit it exactly as prescribed</span>
             </label>
           )}
-          <div style={{ display: "flex", gap: 14, flexWrap: "wrap", alignItems: "flex-end" }}>
+          <div style={{ display: "flex", gap: 10, flexWrap: "nowrap", alignItems: "flex-end" }}>
             <LogField label={`Weight (${unitLabel(unit)})`} value={log.w == null ? null : lbToDisplayRaw(log.w, unit)} onChange={(v) => onLogChange(idx, { ...log, w: displayToLb(v, unit) })} step={unit === "kg" ? 1.25 : 2.5} />
             <LogField label="Reps" value={log.r} onChange={(v) => onLogChange(idx, { ...log, r: v })} step={1} />
             <LogField label="RPE" value={log.rpe} onChange={(v) => onLogChange(idx, { ...log, rpe: v })} step={0.5} />
@@ -1378,7 +1379,7 @@ function WeekOverview({ week, allSessions, nextWorkout, maxesLb, unit, roundToLb
               </div>
               {expanded &&
                 entries.map((entry, idx) => (
-                  <div key={idx} style={{ display: "flex", flexWrap: "wrap", rowGap: 6, justifyContent: "space-between", alignItems: "center", padding: "8px 16px", borderTop: "1px solid #2a2824" }}>
+                  <div key={idx} style={{ display: "flex", alignItems: "flex-start", padding: "8px 16px", borderTop: "1px solid #2a2824" }}>
                     <div style={{ display: "flex", alignItems: "center", minWidth: 0, flexWrap: "wrap", rowGap: 4, flex: "1 1 auto", marginRight: 10 }}>
                       <LiftBadge lift={resolveLift(entry)} />
                       <span style={{ fontFamily: "'Oswald', sans-serif", fontSize: 14, color: "#c9c2b6", wordBreak: "break-word" }}>{entry.exercise}</span>
