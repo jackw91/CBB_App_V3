@@ -538,7 +538,7 @@ function verdictFor(entry, log, unit, roundToLb, roundToKg) {
   return { text: "Missed", color: "#c8553d" };
 }
 
-function ExerciseRow({ entry, idx, setStates, onToggleSet, log, onLogChange, expanded, onToggleExpand, maxesLb, unit, roundToLb, roundToKg, barType, onOpenHistory }) {
+function ExerciseRow({ entry, idx, setStates, onToggleSet, log, onLogChange, expanded, onToggleExpand, maxesLb, unit, roundToLb, roundToKg, barType, onOpenHistory, onViewInExercises }) {
   const verdict = verdictFor(entry, log, unit, roundToLb, roundToKg);
   const prescribed = prescribedValues(entry, maxesLb, unit, roundToLb, roundToKg);
   const matched = isMatchPrescribed(entry, log, prescribed);
@@ -580,7 +580,10 @@ function ExerciseRow({ entry, idx, setStates, onToggleSet, log, onLogChange, exp
           )}
           <span
             className="cb-name"
-            onClick={() => onToggleExpand(idx)}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (onViewInExercises) onViewInExercises(entry.exercise);
+            }}
             style={{
               fontFamily: "'Oswald', sans-serif",
               fontSize: 16,
@@ -1478,10 +1481,17 @@ function ExerciseCard({ exercise, lift, onOpenHistory }) {
   );
 }
 
-function ExercisesView({ onOpenHistory }) {
-  const [search, setSearch] = useState("");
+function ExercisesView({ onOpenHistory, initialSearch, onConsumeInitialSearch }) {
+  const [search, setSearch] = useState(() => initialSearch || "");
   const [activeFilters, setActiveFilters] = useState(() => new Set());
   const [collapsedGroups, setCollapsedGroups] = useState(() => new Set(EXERCISE_GROUP_ORDER.map((g) => g.key)));
+
+  useEffect(() => {
+    if (initialSearch && onConsumeInitialSearch) onConsumeInitialSearch();
+    // Only meant to run once, right after this view mounts with a linked-in
+    // search term — not on every keystroke change to the local search state.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const toggleFilter = (key) => {
     setActiveFilters((prev) => {
@@ -2204,6 +2214,7 @@ export default function CalgaryBarbellApp() {
   const [allSessions, setAllSessions] = useState({}); // "week:day" -> session, across the whole program
   const [loadingHistory, setLoadingHistory] = useState(true);
   const [historyExercise, setHistoryExercise] = useState(null); // exercise name for drill-down modal
+  const [pendingExerciseSearch, setPendingExerciseSearch] = useState(""); // seeds the Exercises tab search box when linked from the Log tab
   const didInitialJump = useRef(false);
 
   const nextWorkout = useMemo(() => computeNextWorkout(allSessions), [allSessions]);
@@ -2348,6 +2359,11 @@ export default function CalgaryBarbellApp() {
   const pctDone = total ? Math.round((doneCount / total) * 100) : 0;
 
 
+
+  const viewExerciseInExercisesTab = (exerciseName) => {
+    setPendingExerciseSearch(exerciseName);
+    setMode("exercises");
+  };
 
   const jumpToDayFromOverview = (d) => {
     if (isTaper) setTaperLabel(TAPER_LABELS_SORTED[d - 1]);
@@ -2692,6 +2708,7 @@ export default function CalgaryBarbellApp() {
                 roundToKg={roundToKg}
                 barType={barType}
                 onOpenHistory={setHistoryExercise}
+                onViewInExercises={viewExerciseInExercisesTab}
               />
             ))}
           </div>
@@ -2716,7 +2733,13 @@ export default function CalgaryBarbellApp() {
         />
       )}
 
-      {mode === "exercises" && <ExercisesView onOpenHistory={setHistoryExercise} />}
+      {mode === "exercises" && (
+        <ExercisesView
+          onOpenHistory={setHistoryExercise}
+          initialSearch={pendingExerciseSearch}
+          onConsumeInitialSearch={() => setPendingExerciseSearch("")}
+        />
+      )}
 
       {mode === "calendar" && <CalendarView sessions={allSessions} loadingData={loadingHistory} onJumpToSession={jumpToSession} />}
 
