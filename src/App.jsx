@@ -1379,15 +1379,15 @@ function WeekOverview({ week, allSessions, nextWorkout, maxesLb, unit, roundToLb
               </div>
               {expanded &&
                 entries.map((entry, idx) => (
-                  <div key={idx} style={{ display: "flex", alignItems: "flex-start", padding: "8px 16px", borderTop: "1px solid #2a2824" }}>
-                    <div style={{ display: "flex", alignItems: "center", minWidth: 0, flexWrap: "nowrap", flex: "1 1 auto", marginRight: 10 }}>
+                  <div key={idx} style={{ padding: "8px 16px", borderTop: "1px solid #2a2824" }}>
+                    <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", rowGap: 4 }}>
                       <LiftBadge lift={resolveLift(entry)} />
-                      <span style={{ fontFamily: "'Oswald', sans-serif", fontSize: 14, color: "#c9c2b6", minWidth: 0, flex: "1 1 auto", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{entry.exercise}</span>
+                      <span style={{ fontFamily: "'Oswald', sans-serif", fontSize: 14, color: "#c9c2b6", wordBreak: "break-word" }}>{entry.exercise}</span>
                       <span style={{ marginLeft: 10, fontSize: 13, color: "#a89f90", fontFamily: "'IBM Plex Mono', monospace", flexShrink: 0 }}>
                         {entry.sets}×{entry.reps ?? "-"}
                       </span>
                     </div>
-                    <div style={{ flexShrink: 0 }}>
+                    <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 6 }}>
                       <LoadDisplay entry={entry} maxesLb={maxesLb} unit={unit} roundToLb={roundToLb} roundToKg={roundToKg} barType={barType} />
                     </div>
                   </div>
