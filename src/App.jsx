@@ -442,11 +442,11 @@ function CollapsibleSection({ title, defaultOpen = true, children }) {
   );
 }
 
-function LoadDisplay({ entry, maxesLb, unit, roundToLb, roundToKg, barType }) {
+function LoadDisplay({ entry, maxesLb, unit, roundToLb, roundToKg, barType, showPlates = true }) {
   if (entry.type === "pct") {
     const raw = calcRawLb(entry, maxesLb);
     const w = toDisplay(raw, unit, roundToLb, roundToKg);
-    const plates = w ? platesPerSide(w, unit, barType) : [];
+    const plates = w && showPlates ? platesPerSide(w, unit, barType) : [];
     return (
       <div style={{ textAlign: "right", marginLeft: "auto" }}>
         <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 22, fontWeight: 600, color: "#e8d9c5" }}>
@@ -1391,7 +1391,7 @@ function WeekOverview({ week, allSessions, nextWorkout, maxesLb, unit, roundToLb
                       </span>
                     </div>
                     <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 6 }}>
-                      <LoadDisplay entry={entry} maxesLb={maxesLb} unit={unit} roundToLb={roundToLb} roundToKg={roundToKg} barType={barType} />
+                      <LoadDisplay entry={entry} maxesLb={maxesLb} unit={unit} roundToLb={roundToLb} roundToKg={roundToKg} barType={barType} showPlates={false} />
                     </div>
                   </div>
                 ))}
@@ -2299,15 +2299,16 @@ export default function CalgaryBarbellApp() {
       const nextSession = { ...session, completion: { ...session.completion, [idx]: next } };
       if (next.every(Boolean) && !nextSession.date) nextSession.date = todayISO();
       const wasComplete = isDayComplete(entries, session);
+      const willCompleteWorkout = !wasComplete && isDayComplete(entries, nextSession);
       persistSession(nextSession);
-      if (nowChecked) {
+      if (nowChecked && !willCompleteWorkout) {
         const restSec = Number(entry?.rest);
         if (restSec) {
           primeAudioCtx();
           setTimer({ label: entry.exercise, endAt: Date.now() + restSec * 1000, duration: restSec });
         }
       }
-      if (!wasComplete && isDayComplete(entries, nextSession)) {
+      if (willCompleteWorkout) {
         setShowWorkoutComplete(true);
       }
     },
