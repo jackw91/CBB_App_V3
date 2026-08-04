@@ -1286,7 +1286,7 @@ function WeekOverview({ week, allSessions, nextWorkout, maxesLb, unit, roundToLb
 
   return (
     <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", width: "100%" }}>
-      <div style={{ flexShrink: 0, paddingTop: 16 }}>
+      <div style={{ flexShrink: 0, paddingTop: 16, paddingBottom: 14 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <button
             onClick={onPrevWeek}
@@ -1710,7 +1710,7 @@ function ExercisesView({ onOpenHistory, initialSearch, onConsumeInitialSearch, a
 
   return (
     <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", width: "100%" }}>
-      <div style={{ flexShrink: 0, paddingTop: 16 }}>
+      <div style={{ flexShrink: 0, paddingTop: 16, paddingBottom: 14 }}>
       <div style={{ position: "relative" }}>
         <input
           type="text"
@@ -2856,7 +2856,7 @@ export default function CalgaryBarbellApp() {
       <div className="cb-content" style={{ flex: 1, minHeight: 0, overflow: "hidden", display: "flex", flexDirection: "column", padding: "0 18px" }}>
       {mode === "log" && (
         <>
-          <div style={{ flexShrink: 0, paddingTop: 16 }}>
+          <div style={{ flexShrink: 0, paddingTop: 16, paddingBottom: 14 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", rowGap: 8 }}>
               <button
                 onClick={() => setMode("overview")}
