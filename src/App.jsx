@@ -1264,28 +1264,31 @@ function WeekOverview({ week, allSessions, nextWorkout, maxesLb, unit, roundToLb
   };
 
   return (
-    <div style={{ marginTop: 16 }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-        <button
-          onClick={onPrevWeek}
-          disabled={Number(week) <= 1}
-          style={{ background: "transparent", border: "1px solid #3a3733", borderRadius: 6, color: Number(week) <= 1 ? "#3a3733" : "#c9c2b6", padding: "10px 16px", fontSize: 20, lineHeight: 1, cursor: Number(week) <= 1 ? "default" : "pointer" }}
-        >
-          ‹
-        </button>
-        <div style={{ textAlign: "center" }}>
-          <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 18, fontWeight: 600, color: "#e8d9c5", textTransform: "uppercase", letterSpacing: "0.04em" }}>{heading}</div>
-          {!isTaperWeek && <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "#726b5f", marginTop: 2 }}>{phaseName}</div>}
+    <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", width: "100%" }}>
+      <div style={{ flexShrink: 0, paddingTop: 16 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <button
+            onClick={onPrevWeek}
+            disabled={Number(week) <= 1}
+            style={{ background: "transparent", border: "1px solid #3a3733", borderRadius: 6, color: Number(week) <= 1 ? "#3a3733" : "#c9c2b6", padding: "10px 16px", fontSize: 20, lineHeight: 1, cursor: Number(week) <= 1 ? "default" : "pointer" }}
+          >
+            ‹
+          </button>
+          <div style={{ textAlign: "center" }}>
+            <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 18, fontWeight: 600, color: "#e8d9c5", textTransform: "uppercase", letterSpacing: "0.04em" }}>{heading}</div>
+            {!isTaperWeek && <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "#726b5f", marginTop: 2 }}>{phaseName}</div>}
+          </div>
+          <button
+            onClick={onNextWeek}
+            disabled={Number(week) >= 16}
+            style={{ background: "transparent", border: "1px solid #3a3733", borderRadius: 6, color: Number(week) >= 16 ? "#3a3733" : "#c9c2b6", padding: "10px 16px", fontSize: 20, lineHeight: 1, cursor: Number(week) >= 16 ? "default" : "pointer" }}
+          >
+            ›
+          </button>
         </div>
-        <button
-          onClick={onNextWeek}
-          disabled={Number(week) >= 16}
-          style={{ background: "transparent", border: "1px solid #3a3733", borderRadius: 6, color: Number(week) >= 16 ? "#3a3733" : "#c9c2b6", padding: "10px 16px", fontSize: 20, lineHeight: 1, cursor: Number(week) >= 16 ? "default" : "pointer" }}
-        >
-          ›
-        </button>
       </div>
 
+      <div className="cb-scroll-pane" style={{ flex: 1, minHeight: 0, paddingTop: 16, paddingBottom: 140 }}>
       <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
         {dayLabels.map(({ day, label }) => {
           const entries = getEntriesAbs(week, day);
@@ -1398,6 +1401,7 @@ function WeekOverview({ week, allSessions, nextWorkout, maxesLb, unit, roundToLb
             </div>
           );
         })}
+      </div>
       </div>
     </div>
   );
@@ -1531,7 +1535,8 @@ function ExercisesView({ onOpenHistory, initialSearch, onConsumeInitialSearch })
   const isSearchOrFilterActive = search.trim() !== "" || activeFilters.size > 0;
 
   return (
-    <div style={{ marginTop: 16 }}>
+    <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", width: "100%" }}>
+      <div style={{ flexShrink: 0, paddingTop: 16 }}>
       <div style={{ position: "relative" }}>
         <input
           type="text"
@@ -1611,8 +1616,10 @@ function ExercisesView({ onOpenHistory, initialSearch, onConsumeInitialSearch })
           );
         })}
       </div>
+      </div>
 
-      <div style={{ marginTop: 20, display: "flex", flexDirection: "column", gap: 24 }}>
+      <div className="cb-scroll-pane" style={{ flex: 1, minHeight: 0, paddingTop: 20, paddingBottom: 140 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
         {groups.length === 0 ? (
           <div style={{ color: "#726b5f", fontSize: 13, padding: 24, border: "1px dashed #3a3733", borderRadius: 6, textAlign: "center" }}>
             No exercises match your search or filters.
@@ -1669,6 +1676,7 @@ function ExercisesView({ onOpenHistory, initialSearch, onConsumeInitialSearch })
             );
           })
         )}
+      </div>
       </div>
     </div>
   );
@@ -2451,15 +2459,16 @@ export default function CalgaryBarbellApp() {
       style={{
         fontFamily: "'IBM Plex Mono', monospace",
         background: "#141311",
-        minHeight: 560,
         color: "#f2ede4",
-        padding: "22px 18px 130px",
         borderRadius: 8,
         position: "relative",
         maxWidth: "100%",
         width: "100%",
         boxSizing: "border-box",
-        overflowX: "hidden",
+        overflow: "hidden",
+        display: "flex",
+        flexDirection: "column",
+        height: "100vh",
       }}
       className="cb-app"
     >
@@ -2468,6 +2477,12 @@ export default function CalgaryBarbellApp() {
         * { box-sizing: border-box; }
         input[type=number]::-webkit-inner-spin-button { opacity: 1; }
         input[type=date] { color-scheme: dark; }
+
+        .cb-app { height: 100vh; }
+        @supports (height: 100dvh) {
+          .cb-app { height: 100dvh; }
+        }
+        .cb-scroll-pane { overflow-y: auto; -webkit-overflow-scrolling: touch; }
 
         @keyframes cbRestPulse {
           0%, 100% { box-shadow: 0 -6px 28px rgba(0,0,0,0.6), 0 -2px 22px rgba(200,85,61,0.25); }
@@ -2483,7 +2498,8 @@ export default function CalgaryBarbellApp() {
         }
 
         @media (max-width: 480px) {
-          .cb-app { padding: 14px 10px 130px !important; }
+          .cb-topbar { padding: 14px 10px 0 !important; }
+          .cb-content { padding: 0 10px !important; }
           .cb-title-eyebrow { font-size: 10px !important; letter-spacing: 0.18em !important; }
           .cb-title-main { font-size: 21px !important; }
           .cb-header { flex-wrap: nowrap !important; align-items: center !important; }
@@ -2502,6 +2518,7 @@ export default function CalgaryBarbellApp() {
         }
       `}</style>
 
+      <div className="cb-topbar" style={{ flexShrink: 0, padding: "22px 18px 0" }}>
       <div className="cb-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", position: "relative", flexWrap: "wrap", rowGap: 10 }}>
         <div style={{ minWidth: 0 }}>
           <div className="cb-title-eyebrow" style={{ fontFamily: "'Oswald', sans-serif", fontSize: 11, letterSpacing: "0.25em", color: "#c8553d", textTransform: "uppercase" }}>
@@ -2640,52 +2657,57 @@ export default function CalgaryBarbellApp() {
           );
         })}
       </div>
+      </div>
 
+      <div className="cb-content" style={{ flex: 1, minHeight: 0, overflow: "hidden", display: "flex", flexDirection: "column", padding: "0 18px" }}>
       {mode === "log" && (
         <>
-          <div style={{ marginTop: 16, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", rowGap: 8 }}>
-            <button
-              onClick={() => setMode("overview")}
-              style={{ background: "transparent", border: "none", color: "#726b5f", cursor: "pointer", fontFamily: "'Oswald', sans-serif", fontSize: 15, textTransform: "uppercase", letterSpacing: "0.04em", padding: "10px 8px", margin: "-10px -8px" }}
-            >
-              ‹ Week Overview
-            </button>
-            <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 14, color: "#a89f90", textTransform: "uppercase", letterSpacing: "0.04em" }}>
-              {isTaper ? taperLabel.replace(/ from Competition/i, "") : `Week ${week} · Day ${day}`}
+          <div style={{ flexShrink: 0, paddingTop: 16 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", rowGap: 8 }}>
+              <button
+                onClick={() => setMode("overview")}
+                style={{ background: "transparent", border: "none", color: "#726b5f", cursor: "pointer", fontFamily: "'Oswald', sans-serif", fontSize: 15, textTransform: "uppercase", letterSpacing: "0.04em", padding: "10px 8px", margin: "-10px -8px" }}
+              >
+                ‹ Week Overview
+              </button>
+              <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 14, color: "#a89f90", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                {isTaper ? taperLabel.replace(/ from Competition/i, "") : `Week ${week} · Day ${day}`}
+              </div>
+            </div>
+
+            <div style={{ marginTop: 14, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+              <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.06em", color: "#726b5f", fontFamily: "'Oswald', sans-serif", whiteSpace: "nowrap" }}>
+                  Completed
+                </span>
+                <input
+                  type="date"
+                  value={session.date || ""}
+                  onChange={(e) => updateDate(e.target.value)}
+                  style={{
+                    padding: "5px 8px",
+                    background: "#1a1815",
+                    border: "1px solid #3a3733",
+                    borderRadius: 3,
+                    color: "#f2ede4",
+                    fontFamily: "'IBM Plex Mono', monospace",
+                    fontSize: 12,
+                  }}
+                />
+              </label>
+            </div>
+
+            <div style={{ marginTop: 12, display: "flex", alignItems: "center", gap: 10 }}>
+              <div style={{ flex: 1, height: 6, background: "#2a2824", borderRadius: 3, overflow: "hidden" }}>
+                <div style={{ width: `${pctDone}%`, height: "100%", background: "#c8553d", transition: "width 0.2s ease" }} />
+              </div>
+              <div style={{ fontSize: 12, color: "#8a8378", minWidth: 46, textAlign: "right" }}>
+                {doneCount}/{total}
+              </div>
             </div>
           </div>
 
-          <div style={{ marginTop: 14, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-            <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.06em", color: "#726b5f", fontFamily: "'Oswald', sans-serif", whiteSpace: "nowrap" }}>
-                Completed
-              </span>
-              <input
-                type="date"
-                value={session.date || ""}
-                onChange={(e) => updateDate(e.target.value)}
-                style={{
-                  padding: "5px 8px",
-                  background: "#1a1815",
-                  border: "1px solid #3a3733",
-                  borderRadius: 3,
-                  color: "#f2ede4",
-                  fontFamily: "'IBM Plex Mono', monospace",
-                  fontSize: 12,
-                }}
-              />
-            </label>
-          </div>
-
-          <div style={{ marginTop: 12, display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ flex: 1, height: 6, background: "#2a2824", borderRadius: 3, overflow: "hidden" }}>
-              <div style={{ width: `${pctDone}%`, height: "100%", background: "#c8553d", transition: "width 0.2s ease" }} />
-            </div>
-            <div style={{ fontSize: 12, color: "#8a8378", minWidth: 46, textAlign: "right" }}>
-              {doneCount}/{total}
-            </div>
-          </div>
-
+          <div className="cb-scroll-pane" style={{ flex: 1, minHeight: 0, paddingBottom: 140 }}>
           <div style={{ marginTop: 16, border: "1px solid #2a2824", borderRadius: 6, overflow: "hidden" }}>
             {entries.length === 0 && (
               <div style={{ padding: 30, textAlign: "center", color: "#726b5f", fontFamily: "'Oswald', sans-serif" }}>
@@ -2715,6 +2737,7 @@ export default function CalgaryBarbellApp() {
           </div>
 
           <NotesBox value={session.notes || ""} onChange={updateNotes} />
+          </div>
         </>
       )}
 
@@ -2742,9 +2765,18 @@ export default function CalgaryBarbellApp() {
         />
       )}
 
-      {mode === "calendar" && <CalendarView sessions={allSessions} loadingData={loadingHistory} onJumpToSession={jumpToSession} />}
+      {mode === "calendar" && (
+        <div className="cb-scroll-pane" style={{ flex: 1, minHeight: 0, paddingTop: 16, paddingBottom: 24 }}>
+          <CalendarView sessions={allSessions} loadingData={loadingHistory} onJumpToSession={jumpToSession} />
+        </div>
+      )}
 
-      {mode === "insights" && <InsightsView unit={unit} roundToLb={roundToLb} roundToKg={roundToKg} sessions={allSessions} loadingData={loadingHistory} />}
+      {mode === "insights" && (
+        <div className="cb-scroll-pane" style={{ flex: 1, minHeight: 0, paddingTop: 16, paddingBottom: 24 }}>
+          <InsightsView unit={unit} roundToLb={roundToLb} roundToKg={roundToKg} sessions={allSessions} loadingData={loadingHistory} />
+        </div>
+      )}
+      </div>
 
       <RestTimerBar
         timer={timer}
