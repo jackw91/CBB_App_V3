@@ -1422,70 +1422,182 @@ const EXERCISE_GROUP_ORDER = [
   { key: "none", label: "Accessory", color: null },
 ];
 
-function ExerciseCard({ exercise, lift, onOpenHistory }) {
+function ExerciseCard({ exercise, lift, stats, unit, onOpenHistory, loadingData }) {
   const description = EXERCISE_DESCRIPTIONS[exercise];
+  const [expanded, setExpanded] = useState(false);
+  const hasData = stats && stats.timesPerformed > 0;
+
+  const displayTotal = hasData ? Math.round(unit === "kg" ? lbToKg(stats.totalTonnageLb) : stats.totalTonnageLb) : 0;
+  const displayPB = hasData ? Math.round((unit === "kg" ? lbToKg(stats.bestWeightLb) : stats.bestWeightLb) * 10) / 10 : 0;
+  const displayE1rm = hasData ? Math.round(unit === "kg" ? lbToKg(stats.bestE1rmLb) : stats.bestE1rmLb) : 0;
+
+  const chartData = hasData
+    ? stats.history.map((h, i) => ({
+        idx: i + 1,
+        label: h.week === 16 ? (TAPER_LABELS_SORTED[h.day - 1] || "").replace(/ from Competition/i, "") : `W${h.week}D${h.day}`,
+        weight: Math.round((unit === "kg" ? lbToKg(h.w) : h.w) * 10) / 10,
+        e1rm: Math.round(unit === "kg" ? lbToKg(epleyE1rmLb(h.w, h.r)) : epleyE1rmLb(h.w, h.r)),
+      }))
+    : [];
+
   return (
     <div
       style={{
-        display: "flex",
-        alignItems: "flex-start",
-        justifyContent: "space-between",
-        gap: 12,
         padding: "14px 16px",
         border: "1px solid #2a2824",
         borderRadius: 6,
         background: "#1a1815",
       }}
     >
-      <div style={{ minWidth: 0 }}>
-        <div style={{ display: "flex", alignItems: "center" }}>
-          <LiftBadge lift={lift} />
-          <span style={{ fontFamily: "'Oswald', sans-serif", fontSize: 15, fontWeight: 600, color: "#e8d9c5", wordBreak: "break-word" }}>
-            {exercise}
-          </span>
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
+        <div style={{ minWidth: 0 }}>
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <LiftBadge lift={lift} />
+            <span style={{ fontFamily: "'Oswald', sans-serif", fontSize: 15, fontWeight: 600, color: "#e8d9c5", wordBreak: "break-word" }}>
+              {exercise}
+            </span>
+          </div>
+          <div
+            style={{
+              marginTop: 6,
+              fontFamily: "'IBM Plex Mono', monospace",
+              fontSize: 13,
+              lineHeight: 1.5,
+              color: description ? "#c9c2b6" : "#726b5f",
+              fontStyle: description ? "normal" : "italic",
+            }}
+          >
+            {description || "No description added yet."}
+          </div>
         </div>
-        <div
-          style={{
-            marginTop: 6,
-            fontFamily: "'IBM Plex Mono', monospace",
-            fontSize: 13,
-            lineHeight: 1.5,
-            color: description ? "#c9c2b6" : "#726b5f",
-            fontStyle: description ? "normal" : "italic",
-          }}
-        >
-          {description || "No description added yet."}
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+          <button
+            className="cb-icon-btn"
+            onClick={() => onOpenHistory(exercise)}
+            aria-label={`View history for ${exercise}`}
+            title="History"
+            style={{
+              width: 34,
+              height: 34,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              background: "#211f1c",
+              border: "1px solid #3a3733",
+              borderRadius: "50%",
+              color: "#a89f90",
+              cursor: "pointer",
+              flexShrink: 0,
+            }}
+          >
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="9" />
+              <path d="M12 7v5l3 2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+          {hasData && (
+            <button
+              className="cb-icon-btn"
+              onClick={() => setExpanded((e) => !e)}
+              aria-label={expanded ? "Collapse stats" : "Expand stats"}
+              style={{
+                width: 34,
+                height: 34,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                background: "#211f1c",
+                border: "1px solid #3a3733",
+                borderRadius: "50%",
+                color: "#a89f90",
+                cursor: "pointer",
+                flexShrink: 0,
+              }}
+            >
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ transform: expanded ? "rotate(180deg)" : "none", transition: "transform 0.15s" }}>
+                <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+          )}
         </div>
       </div>
-      <button
-        className="cb-icon-btn"
-        onClick={() => onOpenHistory(exercise)}
-        aria-label={`View history for ${exercise}`}
-        title="History"
-        style={{
-          width: 34,
-          height: 34,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          background: "#211f1c",
-          border: "1px solid #3a3733",
-          borderRadius: "50%",
-          color: "#a89f90",
-          cursor: "pointer",
-          flexShrink: 0,
-        }}
-      >
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <circle cx="12" cy="12" r="9" />
-          <path d="M12 7v5l3 2" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      </button>
+
+      <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid #2a2824" }}>
+        {loadingData ? (
+          <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: "#726b5f" }}>Loading history…</div>
+        ) : !hasData ? (
+          <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: "#726b5f" }}>Not yet logged</div>
+        ) : (
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 16 }}>
+            <div>
+              <div style={{ fontSize: 9, textTransform: "uppercase", letterSpacing: "0.06em", color: "#726b5f", fontFamily: "'Oswald', sans-serif" }}>Times</div>
+              <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 17, fontWeight: 600, color: "#e8d9c5" }}>{stats.timesPerformed}</div>
+            </div>
+            <div>
+              <div style={{ fontSize: 9, textTransform: "uppercase", letterSpacing: "0.06em", color: "#726b5f", fontFamily: "'Oswald', sans-serif" }}>Total</div>
+              <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 17, fontWeight: 600, color: "#e8d9c5" }}>
+                {displayTotal.toLocaleString()} <span style={{ fontSize: 10, color: "#8a8378", fontFamily: "'IBM Plex Mono', monospace" }}>{unitLabel(unit)}</span>
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: 9, textTransform: "uppercase", letterSpacing: "0.06em", color: "#726b5f", fontFamily: "'Oswald', sans-serif" }}>PB</div>
+              <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 17, fontWeight: 600, color: "#e8d9c5" }}>
+                {displayPB} <span style={{ fontSize: 10, color: "#8a8378", fontFamily: "'IBM Plex Mono', monospace" }}>{unitLabel(unit)}</span>
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: 9, textTransform: "uppercase", letterSpacing: "0.06em", color: "#726b5f", fontFamily: "'Oswald', sans-serif" }}>E1RM</div>
+              <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 17, fontWeight: 600, color: "#e8d9c5" }}>
+                {displayE1rm} <span style={{ fontSize: 10, color: "#8a8378", fontFamily: "'IBM Plex Mono', monospace" }}>{unitLabel(unit)}</span>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {expanded && hasData && (
+        <div style={{ marginTop: 14 }}>
+          <div style={{ width: "100%", height: 160 }}>
+            <ResponsiveContainer>
+              <LineChart data={chartData} margin={{ top: 4, right: 8, bottom: 0, left: -20 }}>
+                <CartesianGrid stroke="#2a2824" strokeDasharray="3 3" />
+                <XAxis dataKey="label" stroke="#726b5f" fontSize={9} tickLine={false} />
+                <YAxis stroke="#726b5f" fontSize={9} tickLine={false} domain={["auto", "auto"]} />
+                <Tooltip contentStyle={{ background: "#211f1c", border: "1px solid #3a3733", fontFamily: "'IBM Plex Mono', monospace", fontSize: 11 }} />
+                <Legend wrapperStyle={{ fontFamily: "'Oswald', sans-serif", fontSize: 11 }} />
+                <Line type="monotone" dataKey="weight" stroke="#e8d9c5" dot={{ r: 2 }} name={`Weight (${unitLabel(unit)})`} strokeWidth={2} />
+                <Line type="monotone" dataKey="e1rm" stroke="#c8553d" dot={{ r: 2 }} name={`E1RM (${unitLabel(unit)})`} strokeWidth={1.5} strokeDasharray="4 3" />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+          <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 6 }}>
+            {stats.history
+              .slice()
+              .reverse()
+              .map((h, i) => {
+                const label = h.week === 16 ? (TAPER_LABELS_SORTED[h.day - 1] || "").replace(/ from Competition/i, "") : `Week ${h.week} · Day ${h.day}`;
+                const wDisplay = Math.round((unit === "kg" ? lbToKg(h.w) : h.w) * 100) / 100;
+                return (
+                  <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 0", borderTop: i === 0 ? "none" : "1px solid #232120" }}>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 12, color: "#c9c2b6" }}>{label}</div>
+                      {h.date && <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: "#726b5f", marginTop: 1 }}>{h.date}</div>}
+                    </div>
+                    <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: "#e8d9c5", flexShrink: 0 }}>
+                      {wDisplay} {unitLabel(unit)} × {h.r} reps
+                      {h.rpe != null ? ` @${h.rpe}` : ""}
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-function ExercisesView({ onOpenHistory, initialSearch, onConsumeInitialSearch }) {
+function ExercisesView({ onOpenHistory, initialSearch, onConsumeInitialSearch, allSessions, startDate, unit, loadingData }) {
   const [search, setSearch] = useState(() => initialSearch || "");
   const [activeFilters, setActiveFilters] = useState(() => new Set());
   const [collapsedGroups, setCollapsedGroups] = useState(() => new Set(EXERCISE_GROUP_ORDER.map((g) => g.key)));
@@ -1514,6 +1626,40 @@ function ExercisesView({ onOpenHistory, initialSearch, onConsumeInitialSearch })
       return next;
     });
   };
+
+  /* One pass over every logged session builds, per exercise: how many times
+     it's been logged with actual weight & reps, total tonnage, best single
+     weight, best E1RM, and the full chronological history for the chart.
+     Restricted to sessions on/after the entered program start date, when set. */
+  const statsByExercise = useMemo(() => {
+    const map = {};
+    ALL_EXERCISES.forEach(({ exercise }) => {
+      map[exercise] = { timesPerformed: 0, totalTonnageLb: 0, bestWeightLb: 0, bestE1rmLb: 0, history: [] };
+    });
+    for (const key of Object.keys(allSessions || {})) {
+      const [weekStr, dayStr] = key.split(":");
+      const week = Number(weekStr);
+      const day = Number(dayStr);
+      const session = allSessions[key];
+      if (startDate && (!session.date || session.date < startDate)) continue;
+      const entries = getEntriesAbs(week, day);
+      entries.forEach((entry, idx) => {
+        const stat = map[entry.exercise];
+        if (!stat) return;
+        const log = session.logs?.[idx];
+        if (!log || log.w == null || log.r == null) return;
+        stat.timesPerformed += 1;
+        const sets = Number(entry.sets) || 0;
+        stat.totalTonnageLb += sets * log.r * log.w;
+        if (log.w > stat.bestWeightLb) stat.bestWeightLb = log.w;
+        const e1rm = epleyE1rmLb(log.w, log.r);
+        if (e1rm && e1rm > stat.bestE1rmLb) stat.bestE1rmLb = e1rm;
+        stat.history.push({ week, day, date: session.date, w: log.w, r: log.r, rpe: log.rpe });
+      });
+    }
+    Object.values(map).forEach((s) => s.history.sort((a, b) => a.week - b.week || a.day - b.day));
+    return map;
+  }, [allSessions, startDate]);
 
   const visibleExercises = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -1668,7 +1814,7 @@ function ExercisesView({ onOpenHistory, initialSearch, onConsumeInitialSearch })
                 {isOpen && (
                   <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                     {group.items.map(({ exercise, lift }) => (
-                      <ExerciseCard key={exercise} exercise={exercise} lift={lift} onOpenHistory={onOpenHistory} />
+                      <ExerciseCard key={exercise} exercise={exercise} lift={lift} onOpenHistory={onOpenHistory} stats={statsByExercise[exercise]} unit={unit} loadingData={loadingData} />
                     ))}
                   </div>
                 )}
@@ -2762,6 +2908,10 @@ export default function CalgaryBarbellApp() {
           onOpenHistory={setHistoryExercise}
           initialSearch={pendingExerciseSearch}
           onConsumeInitialSearch={() => setPendingExerciseSearch("")}
+          allSessions={allSessions}
+          startDate={startDate}
+          unit={unit}
+          loadingData={loadingHistory}
         />
       )}
 
