@@ -9,9 +9,9 @@ const PROGRAM_DATA = JSON.parse(`{"trainingMaxes":{"maxes":{"squat":100,"bench":
 
 const PHASE_ORDER = ["Weeks 1-4", "Weeks 5-8", "Weeks 9-11", "Weeks 12-15", "Taper Week"];
 const LIFT_META = {
-  squat: { label: "Squat", color: "#c8553d" },
-  bench: { label: "Bench", color: "#3d7ea6" },
-  deadlift: { label: "Deadlift", color: "#e0a458" },
+  squat: { label: "Squat", color: "var(--cb-rust)" },
+  bench: { label: "Bench", color: "var(--cb-blue)" },
+  deadlift: { label: "Deadlift", color: "var(--cb-gold)" },
 };
 
 /* The parser only tags entry.lift for %RM-based sets (it reads the formula's
@@ -351,9 +351,9 @@ function PBMedal({ size = 16 }) {
   return (
     <span title="Personal best" aria-label="Personal best" style={{ display: "inline-flex", flexShrink: 0, lineHeight: 0 }}>
       <svg width={size} height={size} viewBox="0 0 24 24">
-        <path d="M8.3 2h7.4l-2.1 7.5h-3.2L8.3 2z" fill="#d4af37" />
-        <circle cx="12" cy="15" r="6.6" fill="#d4af37" stroke="#8a6d1f" strokeWidth="1" />
-        <path d="M12 11.6l1.05 2.15 2.35.35-1.7 1.65.4 2.35-2.1-1.1-2.1 1.1.4-2.35-1.7-1.65 2.35-.35 1.05-2.15z" fill="#8a6d1f" />
+        <path d="M8.3 2h7.4l-2.1 7.5h-3.2L8.3 2z" fill="var(--cb-medal-gold)" />
+        <circle cx="12" cy="15" r="6.6" fill="var(--cb-medal-gold)" stroke="var(--cb-medal-ribbon)" strokeWidth="1" />
+        <path d="M12 11.6l1.05 2.15 2.35.35-1.7 1.65.4 2.35-2.1-1.1-2.1 1.1.4-2.35-1.7-1.65 2.35-.35 1.05-2.15z" fill="var(--cb-medal-ribbon)" />
       </svg>
     </span>
   );
@@ -441,13 +441,13 @@ function CollapsibleSection({ title, defaultOpen = true, children }) {
           justifyContent: "space-between",
           cursor: "pointer",
           paddingBottom: 8,
-          borderBottom: "1px solid #2a2824",
+          borderBottom: "1px solid var(--cb-border)",
         }}
       >
-        <span style={{ fontFamily: "'Oswald', sans-serif", fontSize: 13, textTransform: "uppercase", letterSpacing: "0.08em", color: "#a89f90" }}>
+        <span style={{ fontFamily: "'Oswald', sans-serif", fontSize: 13, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--cb-text-muted)" }}>
           {title}
         </span>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#726b5f" strokeWidth="2" style={{ transform: open ? "rotate(180deg)" : "none", transition: "transform 0.15s" }}>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--cb-text-faint)" strokeWidth="2" style={{ transform: open ? "rotate(180deg)" : "none", transition: "transform 0.15s" }}>
           <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </div>
@@ -463,14 +463,14 @@ function LoadDisplay({ entry, maxesLb, unit, roundToLb, roundToKg, barType, show
     const plates = w && showPlates ? platesPerSide(w, unit, barType) : [];
     return (
       <div style={{ textAlign: "right", marginLeft: "auto" }}>
-        <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 22, fontWeight: 600, color: "#e8d9c5" }}>
+        <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 22, fontWeight: 600, color: "var(--cb-accent)" }}>
           {w ? `${w}` : "—"}
-          <span style={{ fontSize: 12, color: "#8a8378", marginLeft: 4, fontFamily: "'IBM Plex Mono', monospace" }}>
+          <span style={{ fontSize: 12, color: "var(--cb-text-muted-2)", marginLeft: 4, fontFamily: "'IBM Plex Mono', monospace" }}>
             {unitLabel(unit)} · {Math.round(entry.pct * 100)}%
           </span>
         </div>
         {plates.length > 0 && (
-          <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "#726b5f", marginTop: 2 }}>
+          <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "var(--cb-text-faint)", marginTop: 2 }}>
             {plates.join(" / ")} <span style={{ opacity: 0.6 }}>per side</span>
           </div>
         )}
@@ -480,9 +480,9 @@ function LoadDisplay({ entry, maxesLb, unit, roundToLb, roundToKg, barType, show
   if (entry.type === "rpe") {
     return (
       <div style={{ textAlign: "right", marginLeft: "auto" }}>
-        <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 20, fontWeight: 600, color: "#e8d9c5" }}>
+        <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 20, fontWeight: 600, color: "var(--cb-accent)" }}>
           {entry.label.replace(/RPE/i, "")}
-          <span style={{ fontSize: 12, color: "#8a8378", marginLeft: 3, fontFamily: "'IBM Plex Mono', monospace" }}>RPE</span>
+          <span style={{ fontSize: 12, color: "var(--cb-text-muted-2)", marginLeft: 3, fontFamily: "'IBM Plex Mono', monospace" }}>RPE</span>
         </div>
       </div>
     );
@@ -490,7 +490,7 @@ function LoadDisplay({ entry, maxesLb, unit, roundToLb, roundToKg, barType, show
   if (entry.type === "opener") {
     return (
       <div style={{ textAlign: "right", marginLeft: "auto" }}>
-        <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 15, color: "#e0a458", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+        <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 15, color: "var(--cb-gold)", textTransform: "uppercase", letterSpacing: "0.04em" }}>
           Opener
         </div>
       </div>
@@ -499,14 +499,14 @@ function LoadDisplay({ entry, maxesLb, unit, roundToLb, roundToKg, barType, show
   if (entry.type === "load_drop") {
     return (
       <div style={{ textAlign: "right", marginLeft: "auto" }}>
-        <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 14, color: "#c8553d" }}>{entry.label}</div>
+        <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 14, color: "var(--cb-rust)" }}>{entry.label}</div>
       </div>
     );
   }
   if (entry.type === "text") {
     return (
       <div style={{ textAlign: "right", marginLeft: "auto" }}>
-        <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 13, color: "#a89f90" }}>{entry.label}</div>
+        <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 13, color: "var(--cb-text-muted)" }}>{entry.label}</div>
       </div>
     );
   }
@@ -517,7 +517,7 @@ function LoadDisplay({ entry, maxesLb, unit, roundToLb, roundToKg, barType, show
 function LogField({ label, value, onChange, step, placeholder }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 4, flex: "1 1 0", minWidth: 0 }}>
-      <span style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.08em", color: "#726b5f", fontFamily: "'Oswald', sans-serif" }}>
+      <span style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--cb-text-faint)", fontFamily: "'Oswald', sans-serif" }}>
         {label}
       </span>
       <input
@@ -531,10 +531,10 @@ function LogField({ label, value, onChange, step, placeholder }) {
           width: "100%",
           minWidth: 0,
           padding: "12px 10px",
-          background: "#141311",
-          border: "1px solid #3a3733",
+          background: "var(--cb-bg)",
+          border: "1px solid var(--cb-border-strong)",
           borderRadius: 5,
-          color: "#f2ede4",
+          color: "var(--cb-text-primary)",
           fontFamily: "'IBM Plex Mono', monospace",
           fontSize: 16,
         }}
@@ -547,9 +547,9 @@ function verdictFor(entry, log, unit, roundToLb, roundToKg) {
   if (log.r == null) return null;
   const repsTarget = Number(entry.reps);
   if (isNaN(repsTarget)) return null;
-  if (log.r > repsTarget) return { text: "Exceeded", color: "#7fae7a" };
-  if (log.r === repsTarget) return { text: "Hit", color: "#8a8378" };
-  return { text: "Missed", color: "#c8553d" };
+  if (log.r > repsTarget) return { text: "Exceeded", color: "var(--cb-green-light)" };
+  if (log.r === repsTarget) return { text: "Hit", color: "var(--cb-text-muted-2)" };
+  return { text: "Missed", color: "var(--cb-rust)" };
 }
 
 function ExerciseRow({ entry, idx, setStates, onToggleSet, log, onLogChange, expanded, onToggleExpand, maxesLb, unit, roundToLb, roundToKg, barType, onOpenHistory, onViewInExercises, bestWeightLb }) {
@@ -562,12 +562,12 @@ function ExerciseRow({ entry, idx, setStates, onToggleSet, log, onLogChange, exp
   const isPB = log.w != null && bestWeightLb != null && log.w >= bestWeightLb;
 
   return (
-    <div style={{ borderBottom: "1px solid #2a2824" }}>
+    <div style={{ borderBottom: "1px solid var(--cb-border)" }}>
       <div
         className="cb-row"
         style={{
           padding: "14px 16px",
-          borderLeft: done ? "3px solid #4a8752" : "3px solid transparent",
+          borderLeft: done ? "3px solid var(--cb-green)" : "3px solid transparent",
           transition: "border-color 0.15s ease",
           position: "relative",
         }}
@@ -584,7 +584,7 @@ function ExerciseRow({ entry, idx, setStates, onToggleSet, log, onLogChange, exp
                 width: 20,
                 height: 20,
                 borderRadius: "50%",
-                background: "#4a8752",
+                background: "var(--cb-green)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -592,7 +592,7 @@ function ExerciseRow({ entry, idx, setStates, onToggleSet, log, onLogChange, exp
                 marginRight: 7,
               }}
             >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#0f1710" strokeWidth="4">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--cb-text-on-green)" strokeWidth="4">
                 <path d="M4 12.5l5 5L20 6" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </span>
@@ -609,7 +609,7 @@ function ExerciseRow({ entry, idx, setStates, onToggleSet, log, onLogChange, exp
               fontFamily: "'Oswald', sans-serif",
               fontSize: 16,
               fontWeight: 500,
-              color: done ? "#a8d4a0" : "#f2ede4",
+              color: done ? "var(--cb-green-text)" : "var(--cb-text-primary)",
               wordBreak: "break-word",
               cursor: "pointer",
             }}
@@ -623,8 +623,8 @@ function ExerciseRow({ entry, idx, setStates, onToggleSet, log, onLogChange, exp
                 fontFamily: "'Oswald', sans-serif",
                 fontSize: 10,
                 fontWeight: 700,
-                color: "#0f1710",
-                background: "#7fae7a",
+                color: "var(--cb-text-on-green)",
+                background: "var(--cb-green-light)",
                 borderRadius: 3,
                 padding: "2px 7px",
                 textTransform: "uppercase",
@@ -641,7 +641,7 @@ function ExerciseRow({ entry, idx, setStates, onToggleSet, log, onLogChange, exp
           )}
         </div>
 
-        <div className="cb-meta" style={{ display: "flex", gap: 16, marginTop: 6, fontFamily: "'IBM Plex Mono', monospace", fontSize: 14, color: "#c9c2b6", flexWrap: "wrap" }}>
+        <div className="cb-meta" style={{ display: "flex", gap: 16, marginTop: 6, fontFamily: "'IBM Plex Mono', monospace", fontSize: 14, color: "var(--cb-text-secondary)", flexWrap: "wrap" }}>
           <span>{entry.sets}×{entry.reps ?? "-"}</span>
           {entry.tempo && entry.tempo !== "x" && <span>tempo {entry.tempo}</span>}
           {entry.rest && <span>rest {entry.rest}s</span>}
@@ -658,8 +658,8 @@ function ExerciseRow({ entry, idx, setStates, onToggleSet, log, onLogChange, exp
                 width: 29,
                 height: 29,
                 borderRadius: 5,
-                border: `2px solid ${checked ? (done ? "#4a8752" : "#e8d9c5") : "#5a564d"}`,
-                background: checked ? (done ? "#4a8752" : "#e8d9c5") : "transparent",
+                border: `2px solid ${checked ? (done ? "var(--cb-green)" : "var(--cb-accent)") : "var(--cb-border-muted)"}`,
+                background: checked ? (done ? "var(--cb-green)" : "var(--cb-accent)") : "transparent",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -668,15 +668,15 @@ function ExerciseRow({ entry, idx, setStates, onToggleSet, log, onLogChange, exp
               }}
             >
               {checked ? (
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={done ? "#0f1710" : "#1c1a17"} strokeWidth="3.5">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={done ? "var(--cb-text-on-green)" : "var(--cb-text-on-accent)"} strokeWidth="3.5">
                   <path d="M4 12.5l5 5L20 6" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               ) : (
-                <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "#726b5f" }}>{si + 1}</span>
+                <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "var(--cb-text-faint)" }}>{si + 1}</span>
               )}
             </div>
           ))}
-          <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: "#726b5f", marginLeft: 4 }}>
+          <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: "var(--cb-text-faint)", marginLeft: 4 }}>
             {doneCount}/{totalSets}
           </span>
         </div>
@@ -701,10 +701,10 @@ function ExerciseRow({ entry, idx, setStates, onToggleSet, log, onLogChange, exp
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  background: "#1a1815",
-                  border: "1px solid #3a3733",
+                  background: "var(--cb-surface)",
+                  border: "1px solid var(--cb-border-strong)",
                   borderRadius: "50%",
-                  color: "#a89f90",
+                  color: "var(--cb-text-muted)",
                   cursor: "pointer",
                   flexShrink: 0,
                 }}
@@ -728,10 +728,10 @@ function ExerciseRow({ entry, idx, setStates, onToggleSet, log, onLogChange, exp
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                background: "#1a1815",
-                border: "1px solid #3a3733",
+                background: "var(--cb-surface)",
+                border: "1px solid var(--cb-border-strong)",
                 borderRadius: "50%",
-                color: "#a89f90",
+                color: "var(--cb-text-muted)",
                 cursor: "pointer",
                 flexShrink: 0,
               }}
@@ -752,8 +752,8 @@ function ExerciseRow({ entry, idx, setStates, onToggleSet, log, onLogChange, exp
                   width: 18,
                   height: 18,
                   borderRadius: 3,
-                  border: `2px solid ${matched ? "#e8d9c5" : "#5a564d"}`,
-                  background: matched ? "#e8d9c5" : "transparent",
+                  border: `2px solid ${matched ? "var(--cb-accent)" : "var(--cb-border-muted)"}`,
+                  background: matched ? "var(--cb-accent)" : "transparent",
                   flexShrink: 0,
                   display: "flex",
                   alignItems: "center",
@@ -768,12 +768,12 @@ function ExerciseRow({ entry, idx, setStates, onToggleSet, log, onLogChange, exp
                 }}
               >
                 {matched && (
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#1c1a17" strokeWidth="4">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--cb-text-on-accent)" strokeWidth="4">
                     <path d="M4 12.5l5 5L20 6" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 )}
               </span>
-              <span style={{ fontSize: 12, fontFamily: "'IBM Plex Mono', monospace", color: "#a89f90" }}>Hit it exactly as prescribed</span>
+              <span style={{ fontSize: 12, fontFamily: "'IBM Plex Mono', monospace", color: "var(--cb-text-muted)" }}>Hit it exactly as prescribed</span>
             </label>
           )}
           <div style={{ display: "flex", gap: 10, flexWrap: "nowrap", alignItems: "flex-end" }}>
@@ -790,7 +790,7 @@ function ExerciseRow({ entry, idx, setStates, onToggleSet, log, onLogChange, exp
 function NotesBox({ value, onChange }) {
   return (
     <div style={{ marginTop: 18 }}>
-      <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 12, textTransform: "uppercase", letterSpacing: "0.08em", color: "#726b5f", marginBottom: 6 }}>
+      <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 12, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--cb-text-faint)", marginBottom: 6 }}>
         Session Notes
       </div>
       <textarea
@@ -801,10 +801,10 @@ function NotesBox({ value, onChange }) {
         style={{
           width: "100%",
           resize: "vertical",
-          background: "#1a1815",
-          border: "1px solid #3a3733",
+          background: "var(--cb-surface)",
+          border: "1px solid var(--cb-border-strong)",
           borderRadius: 6,
-          color: "#e8d9c5",
+          color: "var(--cb-accent)",
           fontFamily: "'IBM Plex Mono', monospace",
           fontSize: 13,
           padding: 12,
@@ -814,7 +814,7 @@ function NotesBox({ value, onChange }) {
   );
 }
 
-function SettingsPanel({ maxesLb, roundToLb, roundToKg, unit, barType, startDate, onChange, open, onClose, onExportBackup, onImportFile }) {
+function SettingsPanel({ maxesLb, roundToLb, roundToKg, unit, barType, startDate, theme, onChange, open, onClose, onExportBackup, onImportFile }) {
   if (!open) return null;
   const fileInputRef = useRef(null);
   const displayMax = (lift) => {
@@ -830,8 +830,8 @@ function SettingsPanel({ maxesLb, roundToLb, roundToKg, unit, barType, startDate
         top: "100%",
         right: 0,
         marginTop: 8,
-        background: "#211f1c",
-        border: "1px solid #3a3733",
+        background: "var(--cb-surface-2)",
+        border: "1px solid var(--cb-border-strong)",
         borderRadius: 6,
         padding: 18,
         width: 290,
@@ -839,11 +839,38 @@ function SettingsPanel({ maxesLb, roundToLb, roundToKg, unit, barType, startDate
         boxShadow: "0 12px 30px rgba(0,0,0,0.5)",
       }}
     >
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14, paddingBottom: 12, borderBottom: "1px solid var(--cb-border-strong)" }}>
+        <label style={{ fontFamily: "'Oswald', sans-serif", fontSize: 13, color: "var(--cb-text-muted)" }}>Theme</label>
+        <div style={{ display: "flex", border: "1px solid var(--cb-border-strong)", borderRadius: 3, overflow: "hidden" }}>
+          {[
+            { key: "dark", label: "Dark" },
+            { key: "light", label: "Light" },
+          ].map((t) => (
+            <button
+              key={t.key}
+              onClick={() => onChange({ theme: t.key })}
+              style={{
+                padding: "3px 10px",
+                fontSize: 11,
+                fontFamily: "'Oswald', sans-serif",
+                fontWeight: 600,
+                background: theme === t.key ? "var(--cb-accent)" : "transparent",
+                color: theme === t.key ? "var(--cb-text-on-accent)" : "var(--cb-text-muted-2)",
+                border: "none",
+                cursor: "pointer",
+              }}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-        <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 13, textTransform: "uppercase", letterSpacing: "0.06em", color: "#8a8378" }}>
+        <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 13, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--cb-text-muted-2)" }}>
           Training Maxes
         </div>
-        <div style={{ display: "flex", border: "1px solid #3a3733", borderRadius: 3, overflow: "hidden" }}>
+        <div style={{ display: "flex", border: "1px solid var(--cb-border-strong)", borderRadius: 3, overflow: "hidden" }}>
           {["lb", "kg"].map((u) => (
             <button
               key={u}
@@ -853,8 +880,8 @@ function SettingsPanel({ maxesLb, roundToLb, roundToKg, unit, barType, startDate
                 fontSize: 11,
                 fontFamily: "'Oswald', sans-serif",
                 fontWeight: 600,
-                background: unit === u ? "#e8d9c5" : "transparent",
-                color: unit === u ? "#1c1a17" : "#8a8378",
+                background: unit === u ? "var(--cb-accent)" : "transparent",
+                color: unit === u ? "var(--cb-text-on-accent)" : "var(--cb-text-muted-2)",
                 border: "none",
                 cursor: "pointer",
               }}
@@ -866,7 +893,7 @@ function SettingsPanel({ maxesLb, roundToLb, roundToKg, unit, barType, startDate
       </div>
       {["squat", "bench", "deadlift"].map((lift) => (
         <div key={lift} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-          <label style={{ display: "flex", alignItems: "center", fontFamily: "'Oswald', sans-serif", fontSize: 14, color: "#e8d9c5", textTransform: "capitalize" }}>
+          <label style={{ display: "flex", alignItems: "center", fontFamily: "'Oswald', sans-serif", fontSize: 14, color: "var(--cb-accent)", textTransform: "capitalize" }}>
             <LiftBadge lift={lift} />
             {lift}
           </label>
@@ -882,26 +909,26 @@ function SettingsPanel({ maxesLb, roundToLb, roundToKg, unit, barType, startDate
               style={{
                 width: 70,
                 padding: "5px 8px",
-                background: "#141311",
-                border: "1px solid #3a3733",
+                background: "var(--cb-bg)",
+                border: "1px solid var(--cb-border-strong)",
                 borderRadius: 3,
-                color: "#f2ede4",
+                color: "var(--cb-text-primary)",
                 fontFamily: "'IBM Plex Mono', monospace",
                 fontSize: 14,
                 textAlign: "right",
               }}
             />
-            <span style={{ fontSize: 11, color: "#726b5f", fontFamily: "'IBM Plex Mono', monospace" }}>{unitLabel(unit)}</span>
+            <span style={{ fontSize: 11, color: "var(--cb-text-faint)", fontFamily: "'IBM Plex Mono', monospace" }}>{unitLabel(unit)}</span>
           </div>
         </div>
       ))}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 14, paddingTop: 12, borderTop: "1px solid #3a3733" }}>
-        <label style={{ fontFamily: "'Oswald', sans-serif", fontSize: 13, color: "#a89f90" }}>Round to</label>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 14, paddingTop: 12, borderTop: "1px solid var(--cb-border-strong)" }}>
+        <label style={{ fontFamily: "'Oswald', sans-serif", fontSize: 13, color: "var(--cb-text-muted)" }}>Round to</label>
         {unit === "lb" ? (
           <select
             value={roundToLb}
             onChange={(e) => onChange({ roundToLb: Number(e.target.value) })}
-            style={{ background: "#141311", border: "1px solid #3a3733", borderRadius: 3, color: "#f2ede4", fontFamily: "'IBM Plex Mono', monospace", fontSize: 13, padding: "4px 6px" }}
+            style={{ background: "var(--cb-bg)", border: "1px solid var(--cb-border-strong)", borderRadius: 3, color: "var(--cb-text-primary)", fontFamily: "'IBM Plex Mono', monospace", fontSize: 13, padding: "4px 6px" }}
           >
             <option value={5}>5 lb</option>
             <option value={2.5}>2.5 lb</option>
@@ -911,7 +938,7 @@ function SettingsPanel({ maxesLb, roundToLb, roundToKg, unit, barType, startDate
           <select
             value={roundToKg}
             onChange={(e) => onChange({ roundToKg: Number(e.target.value) })}
-            style={{ background: "#141311", border: "1px solid #3a3733", borderRadius: 3, color: "#f2ede4", fontFamily: "'IBM Plex Mono', monospace", fontSize: 13, padding: "4px 6px" }}
+            style={{ background: "var(--cb-bg)", border: "1px solid var(--cb-border-strong)", borderRadius: 3, color: "var(--cb-text-primary)", fontFamily: "'IBM Plex Mono', monospace", fontSize: 13, padding: "4px 6px" }}
           >
             <option value={2.5}>2.5 kg</option>
             <option value={1.25}>1.25 kg</option>
@@ -919,12 +946,12 @@ function SettingsPanel({ maxesLb, roundToLb, roundToKg, unit, barType, startDate
           </select>
         )}
       </div>
-      <div style={{ marginTop: 14, paddingTop: 12, borderTop: "1px solid #3a3733" }}>
-        <label style={{ fontFamily: "'Oswald', sans-serif", fontSize: 13, color: "#a89f90", display: "block", marginBottom: 6 }}>Bar weight</label>
+      <div style={{ marginTop: 14, paddingTop: 12, borderTop: "1px solid var(--cb-border-strong)" }}>
+        <label style={{ fontFamily: "'Oswald', sans-serif", fontSize: 13, color: "var(--cb-text-muted)", display: "block", marginBottom: 6 }}>Bar weight</label>
         <select
           value={barType}
           onChange={(e) => onChange({ barType: e.target.value })}
-          style={{ width: "100%", padding: "6px 8px", background: "#141311", border: "1px solid #3a3733", borderRadius: 3, color: "#f2ede4", fontFamily: "'IBM Plex Mono', monospace", fontSize: 13 }}
+          style={{ width: "100%", padding: "6px 8px", background: "var(--cb-bg)", border: "1px solid var(--cb-border-strong)", borderRadius: 3, color: "var(--cb-text-primary)", fontFamily: "'IBM Plex Mono', monospace", fontSize: 13 }}
         >
           {Object.entries(BAR_PRESETS).map(([key, preset]) => (
             <option key={key} value={key}>
@@ -932,20 +959,20 @@ function SettingsPanel({ maxesLb, roundToLb, roundToKg, unit, barType, startDate
             </option>
           ))}
         </select>
-        <div style={{ fontSize: 11, color: "#726b5f", marginTop: 4 }}>Used to work out the plates-per-side breakdown.</div>
+        <div style={{ fontSize: 11, color: "var(--cb-text-faint)", marginTop: 4 }}>Used to work out the plates-per-side breakdown.</div>
       </div>
-      <div style={{ marginTop: 14, paddingTop: 12, borderTop: "1px solid #3a3733" }}>
-        <label style={{ fontFamily: "'Oswald', sans-serif", fontSize: 13, color: "#a89f90", display: "block", marginBottom: 6 }}>Program start date</label>
+      <div style={{ marginTop: 14, paddingTop: 12, borderTop: "1px solid var(--cb-border-strong)" }}>
+        <label style={{ fontFamily: "'Oswald', sans-serif", fontSize: 13, color: "var(--cb-text-muted)", display: "block", marginBottom: 6 }}>Program start date</label>
         <input
           type="date"
           value={startDate || ""}
           onChange={(e) => onChange({ startDate: e.target.value })}
-          style={{ width: "100%", padding: "6px 8px", background: "#141311", border: "1px solid #3a3733", borderRadius: 3, color: "#f2ede4", fontFamily: "'IBM Plex Mono', monospace", fontSize: 13 }}
+          style={{ width: "100%", padding: "6px 8px", background: "var(--cb-bg)", border: "1px solid var(--cb-border-strong)", borderRadius: 3, color: "var(--cb-text-primary)", fontFamily: "'IBM Plex Mono', monospace", fontSize: 13 }}
         />
-        <div style={{ fontSize: 11, color: "#726b5f", marginTop: 4 }}>Used by "Jump to Today" — assumes Week 1 Day 1 starts this week.</div>
+        <div style={{ fontSize: 11, color: "var(--cb-text-faint)", marginTop: 4 }}>Used by "Jump to Today" — assumes Week 1 Day 1 starts this week.</div>
       </div>
-      <div style={{ marginTop: 14, paddingTop: 12, borderTop: "1px solid #3a3733" }}>
-        <label style={{ fontFamily: "'Oswald', sans-serif", fontSize: 13, color: "#a89f90", display: "block", marginBottom: 8 }}>Backup &amp; Restore</label>
+      <div style={{ marginTop: 14, paddingTop: 12, borderTop: "1px solid var(--cb-border-strong)" }}>
+        <label style={{ fontFamily: "'Oswald', sans-serif", fontSize: 13, color: "var(--cb-text-muted)", display: "block", marginBottom: 8 }}>Backup &amp; Restore</label>
         <div style={{ display: "flex", gap: 8 }}>
           <button
             onClick={onExportBackup}
@@ -953,9 +980,9 @@ function SettingsPanel({ maxesLb, roundToLb, roundToKg, unit, barType, startDate
               flex: 1,
               padding: "8px 0",
               background: "transparent",
-              border: "1px solid #3a3733",
+              border: "1px solid var(--cb-border-strong)",
               borderRadius: 3,
-              color: "#c9c2b6",
+              color: "var(--cb-text-secondary)",
               fontFamily: "'Oswald', sans-serif",
               fontWeight: 600,
               fontSize: 12,
@@ -972,9 +999,9 @@ function SettingsPanel({ maxesLb, roundToLb, roundToKg, unit, barType, startDate
               flex: 1,
               padding: "8px 0",
               background: "transparent",
-              border: "1px solid #3a3733",
+              border: "1px solid var(--cb-border-strong)",
               borderRadius: 3,
-              color: "#c9c2b6",
+              color: "var(--cb-text-secondary)",
               fontFamily: "'Oswald', sans-serif",
               fontWeight: 600,
               fontSize: 12,
@@ -997,7 +1024,7 @@ function SettingsPanel({ maxesLb, roundToLb, roundToKg, unit, barType, startDate
             }}
           />
         </div>
-        <div style={{ fontSize: 11, color: "#726b5f", marginTop: 6 }}>
+        <div style={{ fontSize: 11, color: "var(--cb-text-faint)", marginTop: 6 }}>
           Export a backup file before clearing your browser data or switching devices/browsers — import it here to restore everything.
         </div>
       </div>
@@ -1007,10 +1034,10 @@ function SettingsPanel({ maxesLb, roundToLb, roundToKg, unit, barType, startDate
           marginTop: 16,
           width: "100%",
           padding: "8px 0",
-          background: "#e8d9c5",
+          background: "var(--cb-accent)",
           border: "none",
           borderRadius: 3,
-          color: "#1c1a17",
+          color: "var(--cb-text-on-accent)",
           fontFamily: "'Oswald', sans-serif",
           fontWeight: 600,
           textTransform: "uppercase",
@@ -1065,13 +1092,13 @@ function RestTimerBar({ timer, onDismiss, onExtend }) {
           padding: 24,
         }}
       >
-        <span style={{ width: 84, height: 84, borderRadius: "50%", background: "#7fae7a", display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="#0f1710" strokeWidth="3">
+        <span style={{ width: 84, height: 84, borderRadius: "50%", background: "var(--cb-green-light)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="var(--cb-text-on-green)" strokeWidth="3">
             <path d="M4 12.5l5 5L20 6" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </span>
-        <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 30, fontWeight: 700, color: "#f2ede4", textTransform: "uppercase", letterSpacing: "0.04em" }}>Rest Over</div>
-        <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 16, color: "#c9c2b6", maxWidth: 320 }}>{timer.label}</div>
+        <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 30, fontWeight: 700, color: "var(--cb-text-primary)", textTransform: "uppercase", letterSpacing: "0.04em" }}>Rest Over</div>
+        <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 16, color: "var(--cb-text-secondary)", maxWidth: 320 }}>{timer.label}</div>
         <button
           onClick={(e) => {
             e.stopPropagation();
@@ -1079,10 +1106,10 @@ function RestTimerBar({ timer, onDismiss, onExtend }) {
           }}
           style={{
             marginTop: 10,
-            background: "#7fae7a",
+            background: "var(--cb-green-light)",
             border: "none",
             borderRadius: 8,
-            color: "#0f1710",
+            color: "var(--cb-text-on-green)",
             fontFamily: "'Oswald', sans-serif",
             fontWeight: 700,
             fontSize: 15,
@@ -1094,12 +1121,13 @@ function RestTimerBar({ timer, onDismiss, onExtend }) {
         >
           Let's Go
         </button>
-        <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "#726b5f", marginTop: 4 }}>Tap anywhere to continue</div>
+        <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "var(--cb-text-faint)", marginTop: 4 }}>Tap anywhere to continue</div>
       </div>
     );
   }
 
-  const accent = urgent ? "#e0a458" : "#c8553d";
+  const accent = urgent ? "var(--cb-gold)" : "var(--cb-rust)";
+  const accentGlow = urgent ? "rgba(224,164,88,0.33)" : "rgba(200,85,61,0.33)";
   const mm = Math.floor(remaining / 60);
   const ss = String(remaining % 60).padStart(2, "0");
   return (
@@ -1111,15 +1139,15 @@ function RestTimerBar({ timer, onDismiss, onExtend }) {
         right: 10,
         bottom: "calc(env(safe-area-inset-bottom, 0px) + 18px)",
         zIndex: 50,
-        background: "#1a1815",
+        background: "var(--cb-surface)",
         border: `2px solid ${accent}`,
         borderRadius: 14,
-        boxShadow: `0 -6px 28px rgba(0,0,0,0.6), 0 2px 22px ${accent}55`,
+        boxShadow: `0 -6px 28px rgba(0,0,0,0.6), 0 2px 22px ${accentGlow}`,
         animation: urgent ? "cbRestUrgentPulse 0.6s ease-in-out infinite" : "cbRestPulse 2.2s ease-in-out infinite",
         overflow: "hidden",
       }}
     >
-      <div style={{ height: 4, background: "#2a2824", overflow: "hidden" }}>
+      <div style={{ height: 4, background: "var(--cb-border)", overflow: "hidden" }}>
         <div style={{ width: `${pct * 100}%`, height: "100%", background: accent, transition: "width 0.25s linear" }} />
       </div>
       <div
@@ -1134,7 +1162,7 @@ function RestTimerBar({ timer, onDismiss, onExtend }) {
       >
         <div style={{ position: "relative", width: 56, height: 56, flexShrink: 0 }}>
           <svg width="56" height="56" viewBox="0 0 56 56">
-            <circle cx="28" cy="28" r="24" stroke="#2a2824" strokeWidth="5" fill="none" />
+            <circle cx="28" cy="28" r="24" stroke="var(--cb-border)" strokeWidth="5" fill="none" />
             <circle
               cx="28"
               cy="28"
@@ -1149,28 +1177,28 @@ function RestTimerBar({ timer, onDismiss, onExtend }) {
             />
           </svg>
           <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: "#726b5f" }}>REST</span>
+            <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: "var(--cb-text-faint)" }}>REST</span>
           </div>
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 13, textTransform: "uppercase", color: accent, letterSpacing: "0.05em", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {timer.label}
           </div>
-          <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 34, lineHeight: 1.1, color: "#f2ede4", fontWeight: 700, letterSpacing: "0.01em" }}>
+          <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 34, lineHeight: 1.1, color: "var(--cb-text-primary)", fontWeight: 700, letterSpacing: "0.01em" }}>
             {mm}:{ss}
           </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
           <button
             onClick={onExtend}
-            style={{ background: "transparent", border: "1px solid #3a3733", color: "#c9c2b6", borderRadius: 6, padding: "10px 12px", fontSize: 12, cursor: "pointer", fontFamily: "'Oswald', sans-serif", fontWeight: 600 }}
+            style={{ background: "transparent", border: "1px solid var(--cb-border-strong)", color: "var(--cb-text-secondary)", borderRadius: 6, padding: "10px 12px", fontSize: 12, cursor: "pointer", fontFamily: "'Oswald', sans-serif", fontWeight: 600 }}
           >
             +30s
           </button>
           <button
             onClick={onDismiss}
             aria-label="Dismiss rest timer"
-            style={{ background: "transparent", border: "none", color: "#a89f90", cursor: "pointer", fontSize: 26, lineHeight: 1, padding: "4px 8px" }}
+            style={{ background: "transparent", border: "none", color: "var(--cb-text-muted)", cursor: "pointer", fontSize: 26, lineHeight: 1, padding: "4px 8px" }}
           >
             ×
           </button>
@@ -1200,13 +1228,13 @@ function WorkoutCompleteOverlay({ label, onBackToOverview, onDismiss }) {
         padding: 24,
       }}
     >
-      <span style={{ width: 84, height: 84, borderRadius: "50%", background: "#7fae7a", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="#0f1710" strokeWidth="3">
+      <span style={{ width: 84, height: 84, borderRadius: "50%", background: "var(--cb-green-light)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="var(--cb-text-on-green)" strokeWidth="3">
           <path d="M4 12.5l5 5L20 6" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </span>
-      <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 30, fontWeight: 700, color: "#f2ede4", textTransform: "uppercase", letterSpacing: "0.04em" }}>Workout Complete</div>
-      {label && <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 16, color: "#c9c2b6", maxWidth: 320 }}>{label}</div>}
+      <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 30, fontWeight: 700, color: "var(--cb-text-primary)", textTransform: "uppercase", letterSpacing: "0.04em" }}>Workout Complete</div>
+      {label && <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 16, color: "var(--cb-text-secondary)", maxWidth: 320 }}>{label}</div>}
       <button
         onClick={(e) => {
           e.stopPropagation();
@@ -1214,10 +1242,10 @@ function WorkoutCompleteOverlay({ label, onBackToOverview, onDismiss }) {
         }}
         style={{
           marginTop: 10,
-          background: "#7fae7a",
+          background: "var(--cb-green-light)",
           border: "none",
           borderRadius: 8,
-          color: "#0f1710",
+          color: "var(--cb-text-on-green)",
           fontFamily: "'Oswald', sans-serif",
           fontWeight: 700,
           fontSize: 15,
@@ -1237,7 +1265,7 @@ function WorkoutCompleteOverlay({ label, onBackToOverview, onDismiss }) {
         style={{
           background: "transparent",
           border: "none",
-          color: "#a89f90",
+          color: "var(--cb-text-muted)",
           fontFamily: "'IBM Plex Mono', monospace",
           fontSize: 13,
           textDecoration: "underline",
@@ -1247,7 +1275,7 @@ function WorkoutCompleteOverlay({ label, onBackToOverview, onDismiss }) {
       >
         Stay here
       </button>
-      <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "#726b5f", marginTop: 4 }}>Tap anywhere to dismiss</div>
+      <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "var(--cb-text-faint)", marginTop: 4 }}>Tap anywhere to dismiss</div>
     </div>
   );
 }
@@ -1291,18 +1319,18 @@ function WeekOverview({ week, allSessions, nextWorkout, maxesLb, unit, roundToLb
           <button
             onClick={onPrevWeek}
             disabled={Number(week) <= 1}
-            style={{ background: "transparent", border: "1px solid #3a3733", borderRadius: 6, color: Number(week) <= 1 ? "#3a3733" : "#c9c2b6", padding: "10px 16px", fontSize: 20, lineHeight: 1, cursor: Number(week) <= 1 ? "default" : "pointer" }}
+            style={{ background: "transparent", border: "1px solid var(--cb-border-strong)", borderRadius: 6, color: Number(week) <= 1 ? "var(--cb-border-strong)" : "var(--cb-text-secondary)", padding: "10px 16px", fontSize: 20, lineHeight: 1, cursor: Number(week) <= 1 ? "default" : "pointer" }}
           >
             ‹
           </button>
           <div style={{ textAlign: "center" }}>
-            <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 18, fontWeight: 600, color: "#e8d9c5", textTransform: "uppercase", letterSpacing: "0.04em" }}>{heading}</div>
-            {!isTaperWeek && <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "#726b5f", marginTop: 2 }}>{phaseName}</div>}
+            <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 18, fontWeight: 600, color: "var(--cb-accent)", textTransform: "uppercase", letterSpacing: "0.04em" }}>{heading}</div>
+            {!isTaperWeek && <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "var(--cb-text-faint)", marginTop: 2 }}>{phaseName}</div>}
           </div>
           <button
             onClick={onNextWeek}
             disabled={Number(week) >= 16}
-            style={{ background: "transparent", border: "1px solid #3a3733", borderRadius: 6, color: Number(week) >= 16 ? "#3a3733" : "#c9c2b6", padding: "10px 16px", fontSize: 20, lineHeight: 1, cursor: Number(week) >= 16 ? "default" : "pointer" }}
+            style={{ background: "transparent", border: "1px solid var(--cb-border-strong)", borderRadius: 6, color: Number(week) >= 16 ? "var(--cb-border-strong)" : "var(--cb-text-secondary)", padding: "10px 16px", fontSize: 20, lineHeight: 1, cursor: Number(week) >= 16 ? "default" : "pointer" }}
           >
             ›
           </button>
@@ -1318,8 +1346,8 @@ function WeekOverview({ week, allSessions, nextWorkout, maxesLb, unit, roundToLb
           const complete = isDayComplete(entries, session);
           const isNext = !!nextWorkout && nextWorkout.week === Number(week) && nextWorkout.day === day;
           const expanded = expandedDays.has(day);
-          const borderColor = complete ? "#4a8752" : isNext ? "#c8553d" : "#2a2824";
-          const headerBg = complete ? "rgba(127,174,122,0.16)" : isNext ? "rgba(200,85,61,0.12)" : "#1a1815";
+          const borderColor = complete ? "var(--cb-green)" : isNext ? "var(--cb-rust)" : "var(--cb-border)";
+          const headerBg = complete ? "rgba(127,174,122,0.16)" : isNext ? "rgba(200,85,61,0.12)" : "var(--cb-surface)";
 
           return (
             <div
@@ -1347,20 +1375,20 @@ function WeekOverview({ week, allSessions, nextWorkout, maxesLb, unit, roundToLb
               >
                 <span style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", rowGap: 6 }}>
                   {complete ? (
-                    <span style={{ width: 22, height: 22, borderRadius: "50%", background: "#4a8752", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0f1710" strokeWidth="4">
+                    <span style={{ width: 22, height: 22, borderRadius: "50%", background: "var(--cb-green)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--cb-text-on-green)" strokeWidth="4">
                         <path d="M4 12.5l5 5L20 6" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
                     </span>
                   ) : isNext ? (
-                    <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#c8553d", flexShrink: 0 }} />
+                    <span style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--cb-rust)", flexShrink: 0 }} />
                   ) : null}
                   <span
                     style={{
                       fontFamily: "'Oswald', sans-serif",
                       fontSize: 15,
                       fontWeight: 700,
-                      color: complete ? "#a8d4a0" : isNext ? "#e8b199" : "#e8d9c5",
+                      color: complete ? "var(--cb-green-text)" : isNext ? "var(--cb-rust-light-text)" : "var(--cb-accent)",
                       textTransform: "uppercase",
                       letterSpacing: "0.04em",
                     }}
@@ -1368,18 +1396,18 @@ function WeekOverview({ week, allSessions, nextWorkout, maxesLb, unit, roundToLb
                     {label}
                   </span>
                   {complete && (
-                    <span style={{ fontFamily: "'Oswald', sans-serif", fontSize: 10, fontWeight: 700, color: "#0f1710", background: "#7fae7a", borderRadius: 3, padding: "2px 7px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                    <span style={{ fontFamily: "'Oswald', sans-serif", fontSize: 10, fontWeight: 700, color: "var(--cb-text-on-green)", background: "var(--cb-green-light)", borderRadius: 3, padding: "2px 7px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
                       Completed
                     </span>
                   )}
                   {isNext && !complete && (
-                    <span style={{ fontFamily: "'Oswald', sans-serif", fontSize: 10, fontWeight: 700, color: "#1c1a17", background: "#c8553d", borderRadius: 3, padding: "2px 7px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                    <span style={{ fontFamily: "'Oswald', sans-serif", fontSize: 10, fontWeight: 700, color: "var(--cb-text-on-accent)", background: "var(--cb-rust)", borderRadius: 3, padding: "2px 7px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
                       Next Workout
                     </span>
                   )}
                 </span>
                 <span style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#726b5f" strokeWidth="2" style={{ transform: expanded ? "rotate(180deg)" : "none", transition: "transform 0.15s" }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--cb-text-faint)" strokeWidth="2" style={{ transform: expanded ? "rotate(180deg)" : "none", transition: "transform 0.15s" }}>
                     <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                   <button
@@ -1389,9 +1417,9 @@ function WeekOverview({ week, allSessions, nextWorkout, maxesLb, unit, roundToLb
                     }}
                     style={{
                       background: "transparent",
-                      border: "1px solid #3a3733",
+                      border: "1px solid var(--cb-border-strong)",
                       borderRadius: 6,
-                      color: "#c9c2b6",
+                      color: "var(--cb-text-secondary)",
                       fontFamily: "'Oswald', sans-serif",
                       fontSize: 13,
                       textTransform: "uppercase",
@@ -1406,11 +1434,11 @@ function WeekOverview({ week, allSessions, nextWorkout, maxesLb, unit, roundToLb
               </div>
               {expanded &&
                 entries.map((entry, idx) => (
-                  <div key={idx} style={{ padding: "8px 16px", borderTop: "1px solid #2a2824" }}>
+                  <div key={idx} style={{ padding: "8px 16px", borderTop: "1px solid var(--cb-border)" }}>
                     <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", rowGap: 4 }}>
                       <LiftBadge lift={resolveLift(entry)} />
-                      <span style={{ fontFamily: "'Oswald', sans-serif", fontSize: 14, color: "#c9c2b6", wordBreak: "break-word" }}>{entry.exercise}</span>
-                      <span style={{ marginLeft: 10, fontSize: 13, color: "#a89f90", fontFamily: "'IBM Plex Mono', monospace", flexShrink: 0 }}>
+                      <span style={{ fontFamily: "'Oswald', sans-serif", fontSize: 14, color: "var(--cb-text-secondary)", wordBreak: "break-word" }}>{entry.exercise}</span>
+                      <span style={{ marginLeft: 10, fontSize: 13, color: "var(--cb-text-muted)", fontFamily: "'IBM Plex Mono', monospace", flexShrink: 0 }}>
                         {entry.sets}×{entry.reps ?? "-"}
                       </span>
                     </div>
@@ -1465,16 +1493,16 @@ function ExerciseCard({ exercise, lift, stats, unit, onOpenHistory, loadingData 
     <div
       style={{
         padding: "14px 16px",
-        border: "1px solid #2a2824",
+        border: "1px solid var(--cb-border)",
         borderRadius: 6,
-        background: "#1a1815",
+        background: "var(--cb-surface)",
       }}
     >
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
         <div style={{ minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "center" }}>
             <LiftBadge lift={lift} />
-            <span style={{ fontFamily: "'Oswald', sans-serif", fontSize: 15, fontWeight: 600, color: "#e8d9c5", wordBreak: "break-word" }}>
+            <span style={{ fontFamily: "'Oswald', sans-serif", fontSize: 15, fontWeight: 600, color: "var(--cb-accent)", wordBreak: "break-word" }}>
               {exercise}
             </span>
           </div>
@@ -1484,7 +1512,7 @@ function ExerciseCard({ exercise, lift, stats, unit, onOpenHistory, loadingData 
               fontFamily: "'IBM Plex Mono', monospace",
               fontSize: 13,
               lineHeight: 1.5,
-              color: description ? "#c9c2b6" : "#726b5f",
+              color: description ? "var(--cb-text-secondary)" : "var(--cb-text-faint)",
               fontStyle: description ? "normal" : "italic",
             }}
           >
@@ -1503,10 +1531,10 @@ function ExerciseCard({ exercise, lift, stats, unit, onOpenHistory, loadingData 
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              background: "#211f1c",
-              border: "1px solid #3a3733",
+              background: "var(--cb-surface-2)",
+              border: "1px solid var(--cb-border-strong)",
               borderRadius: "50%",
-              color: "#a89f90",
+              color: "var(--cb-text-muted)",
               cursor: "pointer",
               flexShrink: 0,
             }}
@@ -1527,10 +1555,10 @@ function ExerciseCard({ exercise, lift, stats, unit, onOpenHistory, loadingData 
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                background: "#211f1c",
-                border: "1px solid #3a3733",
+                background: "var(--cb-surface-2)",
+                border: "1px solid var(--cb-border-strong)",
                 borderRadius: "50%",
-                color: "#a89f90",
+                color: "var(--cb-text-muted)",
                 cursor: "pointer",
                 flexShrink: 0,
               }}
@@ -1543,33 +1571,33 @@ function ExerciseCard({ exercise, lift, stats, unit, onOpenHistory, loadingData 
         </div>
       </div>
 
-      <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid #2a2824" }}>
+      <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid var(--cb-border)" }}>
         {loadingData ? (
-          <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: "#726b5f" }}>Loading history…</div>
+          <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: "var(--cb-text-faint)" }}>Loading history…</div>
         ) : !hasData ? (
-          <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: "#726b5f" }}>Not yet logged</div>
+          <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: "var(--cb-text-faint)" }}>Not yet logged</div>
         ) : (
           <div style={{ display: "flex", flexWrap: "wrap", gap: 16 }}>
             <div>
-              <div style={{ fontSize: 9, textTransform: "uppercase", letterSpacing: "0.06em", color: "#726b5f", fontFamily: "'Oswald', sans-serif" }}>Times</div>
-              <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 17, fontWeight: 600, color: "#e8d9c5" }}>{stats.timesPerformed}</div>
+              <div style={{ fontSize: 9, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--cb-text-faint)", fontFamily: "'Oswald', sans-serif" }}>Times</div>
+              <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 17, fontWeight: 600, color: "var(--cb-accent)" }}>{stats.timesPerformed}</div>
             </div>
             <div>
-              <div style={{ fontSize: 9, textTransform: "uppercase", letterSpacing: "0.06em", color: "#726b5f", fontFamily: "'Oswald', sans-serif" }}>Total</div>
-              <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 17, fontWeight: 600, color: "#e8d9c5" }}>
-                {displayTotal.toLocaleString()} <span style={{ fontSize: 10, color: "#8a8378", fontFamily: "'IBM Plex Mono', monospace" }}>{unitLabel(unit)}</span>
+              <div style={{ fontSize: 9, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--cb-text-faint)", fontFamily: "'Oswald', sans-serif" }}>Total</div>
+              <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 17, fontWeight: 600, color: "var(--cb-accent)" }}>
+                {displayTotal.toLocaleString()} <span style={{ fontSize: 10, color: "var(--cb-text-muted-2)", fontFamily: "'IBM Plex Mono', monospace" }}>{unitLabel(unit)}</span>
               </div>
             </div>
             <div>
-              <div style={{ fontSize: 9, textTransform: "uppercase", letterSpacing: "0.06em", color: "#726b5f", fontFamily: "'Oswald', sans-serif" }}>PB</div>
-              <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 17, fontWeight: 600, color: "#e8d9c5" }}>
-                {displayPB} <span style={{ fontSize: 10, color: "#8a8378", fontFamily: "'IBM Plex Mono', monospace" }}>{unitLabel(unit)}</span>
+              <div style={{ fontSize: 9, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--cb-text-faint)", fontFamily: "'Oswald', sans-serif" }}>PB</div>
+              <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 17, fontWeight: 600, color: "var(--cb-accent)" }}>
+                {displayPB} <span style={{ fontSize: 10, color: "var(--cb-text-muted-2)", fontFamily: "'IBM Plex Mono', monospace" }}>{unitLabel(unit)}</span>
               </div>
             </div>
             <div>
-              <div style={{ fontSize: 9, textTransform: "uppercase", letterSpacing: "0.06em", color: "#726b5f", fontFamily: "'Oswald', sans-serif" }}>E1RM</div>
-              <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 17, fontWeight: 600, color: "#e8d9c5" }}>
-                {displayE1rm} <span style={{ fontSize: 10, color: "#8a8378", fontFamily: "'IBM Plex Mono', monospace" }}>{unitLabel(unit)}</span>
+              <div style={{ fontSize: 9, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--cb-text-faint)", fontFamily: "'Oswald', sans-serif" }}>E1RM</div>
+              <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 17, fontWeight: 600, color: "var(--cb-accent)" }}>
+                {displayE1rm} <span style={{ fontSize: 10, color: "var(--cb-text-muted-2)", fontFamily: "'IBM Plex Mono', monospace" }}>{unitLabel(unit)}</span>
               </div>
             </div>
           </div>
@@ -1581,13 +1609,13 @@ function ExerciseCard({ exercise, lift, stats, unit, onOpenHistory, loadingData 
           <div style={{ width: "100%", height: 160 }}>
             <ResponsiveContainer>
               <LineChart data={chartData} margin={{ top: 4, right: 8, bottom: 0, left: -20 }}>
-                <CartesianGrid stroke="#2a2824" strokeDasharray="3 3" />
-                <XAxis dataKey="label" stroke="#726b5f" fontSize={9} tickLine={false} />
-                <YAxis stroke="#726b5f" fontSize={9} tickLine={false} domain={["auto", "auto"]} />
-                <Tooltip contentStyle={{ background: "#211f1c", border: "1px solid #3a3733", fontFamily: "'IBM Plex Mono', monospace", fontSize: 11 }} />
+                <CartesianGrid stroke="var(--cb-border)" strokeDasharray="3 3" />
+                <XAxis dataKey="label" stroke="var(--cb-text-faint)" fontSize={9} tickLine={false} />
+                <YAxis stroke="var(--cb-text-faint)" fontSize={9} tickLine={false} domain={["auto", "auto"]} />
+                <Tooltip contentStyle={{ background: "var(--cb-surface-2)", border: "1px solid var(--cb-border-strong)", fontFamily: "'IBM Plex Mono', monospace", fontSize: 11 }} />
                 <Legend wrapperStyle={{ fontFamily: "'Oswald', sans-serif", fontSize: 11 }} />
-                <Line type="monotone" dataKey="weight" stroke="#e8d9c5" dot={{ r: 2 }} name={`Weight (${unitLabel(unit)})`} strokeWidth={2} />
-                <Line type="monotone" dataKey="e1rm" stroke="#c8553d" dot={{ r: 2 }} name={`E1RM (${unitLabel(unit)})`} strokeWidth={1.5} strokeDasharray="4 3" />
+                <Line type="monotone" dataKey="weight" stroke="var(--cb-accent)" dot={{ r: 2 }} name={`Weight (${unitLabel(unit)})`} strokeWidth={2} />
+                <Line type="monotone" dataKey="e1rm" stroke="var(--cb-rust)" dot={{ r: 2 }} name={`E1RM (${unitLabel(unit)})`} strokeWidth={1.5} strokeDasharray="4 3" />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -1600,14 +1628,14 @@ function ExerciseCard({ exercise, lift, stats, unit, onOpenHistory, loadingData 
                 const wDisplay = Math.round((unit === "kg" ? lbToKg(h.w) : h.w) * 100) / 100;
                 const isPB = h.w >= stats.bestWeightLb;
                 return (
-                  <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 0", borderTop: i === 0 ? "none" : "1px solid #232120" }}>
+                  <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 0", borderTop: i === 0 ? "none" : "1px solid var(--cb-border-2)" }}>
                     <div style={{ minWidth: 0 }}>
-                      <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 12, color: "#c9c2b6" }}>{label}</div>
-                      {h.date && <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: "#726b5f", marginTop: 1 }}>{h.date}</div>}
+                      <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 12, color: "var(--cb-text-secondary)" }}>{label}</div>
+                      {h.date && <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: "var(--cb-text-faint)", marginTop: 1 }}>{h.date}</div>}
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
                       {isPB && <PBMedal size={14} />}
-                      <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: "#e8d9c5" }}>
+                      <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: "var(--cb-accent)" }}>
                         {wDisplay} {unitLabel(unit)} × {h.r} reps
                         {h.rpe != null ? ` @${h.rpe}` : ""}
                       </div>
@@ -1720,10 +1748,10 @@ function ExercisesView({ onOpenHistory, initialSearch, onConsumeInitialSearch, a
           style={{
             width: "100%",
             padding: search ? "10px 40px 10px 12px" : "10px 12px",
-            background: "#1a1815",
-            border: "1px solid #3a3733",
+            background: "var(--cb-surface)",
+            border: "1px solid var(--cb-border-strong)",
             borderRadius: 6,
-            color: "#f2ede4",
+            color: "var(--cb-text-primary)",
             fontFamily: "'IBM Plex Mono', monospace",
             fontSize: 14,
           }}
@@ -1744,7 +1772,7 @@ function ExercisesView({ onOpenHistory, initialSearch, onConsumeInitialSearch, a
               justifyContent: "center",
               background: "transparent",
               border: "none",
-              color: "#a89f90",
+              color: "var(--cb-text-muted)",
               fontSize: 20,
               lineHeight: 1,
               cursor: "pointer",
@@ -1769,9 +1797,9 @@ function ExercisesView({ onOpenHistory, initialSearch, onConsumeInitialSearch, a
                 gap: 6,
                 padding: "6px 12px",
                 borderRadius: 20,
-                border: isActive ? "1px solid #e8d9c5" : "1px solid #3a3733",
+                border: isActive ? "1px solid var(--cb-accent)" : "1px solid var(--cb-border-strong)",
                 background: isActive ? "rgba(232,217,197,0.1)" : "transparent",
-                color: isActive ? "#e8d9c5" : "#a89f90",
+                color: isActive ? "var(--cb-accent)" : "var(--cb-text-muted)",
                 fontFamily: "'Oswald', sans-serif",
                 fontSize: 12,
                 fontWeight: 600,
@@ -1783,7 +1811,7 @@ function ExercisesView({ onOpenHistory, initialSearch, onConsumeInitialSearch, a
               {opt.color ? (
                 <span style={{ width: 8, height: 8, borderRadius: "50%", background: opt.color, flexShrink: 0 }} />
               ) : (
-                <span style={{ width: 8, height: 8, borderRadius: "50%", border: "1.5px solid #5a564d", flexShrink: 0 }} />
+                <span style={{ width: 8, height: 8, borderRadius: "50%", border: "1.5px solid var(--cb-border-muted)", flexShrink: 0 }} />
               )}
               {opt.label}
             </button>
@@ -1795,7 +1823,7 @@ function ExercisesView({ onOpenHistory, initialSearch, onConsumeInitialSearch, a
       <div className="cb-scroll-pane" style={{ flex: 1, minHeight: 0, paddingTop: 20, paddingBottom: 140 }}>
       <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
         {groups.length === 0 ? (
-          <div style={{ color: "#726b5f", fontSize: 13, padding: 24, border: "1px dashed #3a3733", borderRadius: 6, textAlign: "center" }}>
+          <div style={{ color: "var(--cb-text-faint)", fontSize: 13, padding: 24, border: "1px dashed var(--cb-border-strong)", borderRadius: 6, textAlign: "center" }}>
             No exercises match your search or filters.
           </div>
         ) : (
@@ -1812,7 +1840,7 @@ function ExercisesView({ onOpenHistory, initialSearch, onConsumeInitialSearch, a
                     gap: 8,
                     marginBottom: isOpen ? 10 : 0,
                     paddingBottom: 8,
-                    borderBottom: "1px solid #2a2824",
+                    borderBottom: "1px solid var(--cb-border)",
                     cursor: "pointer",
                   }}
                 >
@@ -1820,19 +1848,19 @@ function ExercisesView({ onOpenHistory, initialSearch, onConsumeInitialSearch, a
                     {group.color ? (
                       <span style={{ width: 9, height: 9, borderRadius: "50%", background: group.color, flexShrink: 0 }} />
                     ) : (
-                      <span style={{ width: 9, height: 9, borderRadius: "50%", border: "1.5px solid #5a564d", flexShrink: 0 }} />
+                      <span style={{ width: 9, height: 9, borderRadius: "50%", border: "1.5px solid var(--cb-border-muted)", flexShrink: 0 }} />
                     )}
-                    <span style={{ fontFamily: "'Oswald', sans-serif", fontSize: 13, textTransform: "uppercase", letterSpacing: "0.08em", color: "#a89f90", fontWeight: 600 }}>
+                    <span style={{ fontFamily: "'Oswald', sans-serif", fontSize: 13, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--cb-text-muted)", fontWeight: 600 }}>
                       {group.label}
                     </span>
-                    <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: "#726b5f" }}>{group.items.length}</span>
+                    <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: "var(--cb-text-faint)" }}>{group.items.length}</span>
                   </div>
                   <svg
                     width="16"
                     height="16"
                     viewBox="0 0 24 24"
                     fill="none"
-                    stroke="#726b5f"
+                    stroke="var(--cb-text-faint)"
                     strokeWidth="2"
                     style={{ transform: isOpen ? "rotate(180deg)" : "none", transition: "transform 0.15s", flexShrink: 0 }}
                   >
@@ -1974,19 +2002,19 @@ function InsightsView({ unit, roundToLb, roundToKg, sessions, loadingData }) {
     <div style={{ marginTop: 8 }}>
       <CollapsibleSection title={`Estimated 1RM by week (${unitLabel(unit)})`} defaultOpen={false}>
         {loadingData ? (
-          <div style={{ color: "#726b5f", fontSize: 13, padding: 20 }}>Loading logged sets…</div>
+          <div style={{ color: "var(--cb-text-faint)", fontSize: 13, padding: 20 }}>Loading logged sets…</div>
         ) : !hasAnyE1rm ? (
-          <div style={{ color: "#726b5f", fontSize: 13, padding: 20, border: "1px dashed #3a3733", borderRadius: 6, textAlign: "center" }}>
+          <div style={{ color: "var(--cb-text-faint)", fontSize: 13, padding: 20, border: "1px dashed var(--cb-border-strong)", borderRadius: 6, textAlign: "center" }}>
             Log actual weight &amp; reps on a set (tap the arrow on any exercise) to start building this chart.
           </div>
         ) : (
           <div style={{ width: "100%", height: 260 }}>
             <ResponsiveContainer>
               <LineChart data={chartData} margin={{ top: 8, right: 12, bottom: 0, left: -18 }}>
-                <CartesianGrid stroke="#2a2824" strokeDasharray="3 3" />
-                <XAxis dataKey="week" stroke="#726b5f" fontSize={11} tickLine={false} label={{ value: "Week", position: "insideBottom", offset: -2, fill: "#726b5f", fontSize: 11 }} />
-                <YAxis stroke="#726b5f" fontSize={11} tickLine={false} domain={["auto", "auto"]} />
-                <Tooltip contentStyle={{ background: "#211f1c", border: "1px solid #3a3733", fontFamily: "'IBM Plex Mono', monospace", fontSize: 12 }} labelFormatter={(w) => `Week ${w}`} />
+                <CartesianGrid stroke="var(--cb-border)" strokeDasharray="3 3" />
+                <XAxis dataKey="week" stroke="var(--cb-text-faint)" fontSize={11} tickLine={false} label={{ value: "Week", position: "insideBottom", offset: -2, fill: "var(--cb-text-faint)", fontSize: 11 }} />
+                <YAxis stroke="var(--cb-text-faint)" fontSize={11} tickLine={false} domain={["auto", "auto"]} />
+                <Tooltip contentStyle={{ background: "var(--cb-surface-2)", border: "1px solid var(--cb-border-strong)", fontFamily: "'IBM Plex Mono', monospace", fontSize: 12 }} labelFormatter={(w) => `Week ${w}`} />
                 <Legend wrapperStyle={{ fontFamily: "'Oswald', sans-serif", fontSize: 12 }} />
                 <Line type="monotone" dataKey="squat" stroke={LIFT_META.squat.color} dot={{ r: 3 }} connectNulls name="Squat" />
                 <Line type="monotone" dataKey="bench" stroke={LIFT_META.bench.color} dot={{ r: 3 }} connectNulls name="Bench" />
@@ -1999,19 +2027,19 @@ function InsightsView({ unit, roundToLb, roundToKg, sessions, loadingData }) {
 
       <CollapsibleSection title={`Weekly Volume (${unitLabel(unit)})`} defaultOpen={false}>
         {loadingData ? (
-          <div style={{ color: "#726b5f", fontSize: 13, padding: 20 }}>Loading logged sets…</div>
+          <div style={{ color: "var(--cb-text-faint)", fontSize: 13, padding: 20 }}>Loading logged sets…</div>
         ) : !hasAnyTonnage ? (
-          <div style={{ color: "#726b5f", fontSize: 13, padding: 20, border: "1px dashed #3a3733", borderRadius: 6, textAlign: "center" }}>
+          <div style={{ color: "var(--cb-text-faint)", fontSize: 13, padding: 20, border: "1px dashed var(--cb-border-strong)", borderRadius: 6, textAlign: "center" }}>
             Log actual weight &amp; reps to see tonnage (sets × reps × weight) per lift by week.
           </div>
         ) : (
           <div style={{ width: "100%", height: 240 }}>
             <ResponsiveContainer>
               <BarChart data={tonnageData} margin={{ top: 8, right: 12, bottom: 0, left: -10 }}>
-                <CartesianGrid stroke="#2a2824" strokeDasharray="3 3" />
-                <XAxis dataKey="week" stroke="#726b5f" fontSize={11} tickLine={false} label={{ value: "Week", position: "insideBottom", offset: -2, fill: "#726b5f", fontSize: 11 }} />
-                <YAxis stroke="#726b5f" fontSize={11} tickLine={false} />
-                <Tooltip contentStyle={{ background: "#211f1c", border: "1px solid #3a3733", fontFamily: "'IBM Plex Mono', monospace", fontSize: 12 }} labelFormatter={(w) => `Week ${w}`} />
+                <CartesianGrid stroke="var(--cb-border)" strokeDasharray="3 3" />
+                <XAxis dataKey="week" stroke="var(--cb-text-faint)" fontSize={11} tickLine={false} label={{ value: "Week", position: "insideBottom", offset: -2, fill: "var(--cb-text-faint)", fontSize: 11 }} />
+                <YAxis stroke="var(--cb-text-faint)" fontSize={11} tickLine={false} />
+                <Tooltip contentStyle={{ background: "var(--cb-surface-2)", border: "1px solid var(--cb-border-strong)", fontFamily: "'IBM Plex Mono', monospace", fontSize: 12 }} labelFormatter={(w) => `Week ${w}`} />
                 <Legend wrapperStyle={{ fontFamily: "'Oswald', sans-serif", fontSize: 12 }} />
                 <Bar dataKey="squat" fill={LIFT_META.squat.color} name="Squat" radius={[2, 2, 0, 0]} />
                 <Bar dataKey="bench" fill={LIFT_META.bench.color} name="Bench" radius={[2, 2, 0, 0]} />
@@ -2024,9 +2052,9 @@ function InsightsView({ unit, roundToLb, roundToKg, sessions, loadingData }) {
 
       <CollapsibleSection title="Personal Records" defaultOpen={false}>
         {loadingData ? (
-          <div style={{ color: "#726b5f", fontSize: 13, padding: 20 }}>Loading logged sets…</div>
+          <div style={{ color: "var(--cb-text-faint)", fontSize: 13, padding: 20 }}>Loading logged sets…</div>
         ) : !hasAnyPR ? (
-          <div style={{ color: "#726b5f", fontSize: 13, padding: 20, border: "1px dashed #3a3733", borderRadius: 6, textAlign: "center" }}>
+          <div style={{ color: "var(--cb-text-faint)", fontSize: 13, padding: 20, border: "1px dashed var(--cb-border-strong)", borderRadius: 6, textAlign: "center" }}>
             Log actual weight &amp; reps to track your heaviest lifts and best estimated 1RM per lift here.
           </div>
         ) : (
@@ -2035,44 +2063,44 @@ function InsightsView({ unit, roundToLb, roundToKg, sessions, loadingData }) {
               const b = prData.best[lift];
               const liftHasData = b.e1rm > 0 || b.weight > 0;
               return (
-                <div key={lift} style={{ border: "1px solid #2a2824", borderRadius: 6, padding: 14, background: "#1a1815" }}>
+                <div key={lift} style={{ border: "1px solid var(--cb-border)", borderRadius: 6, padding: 14, background: "var(--cb-surface)" }}>
                   <div style={{ display: "flex", alignItems: "center", marginBottom: 10 }}>
                     <LiftBadge lift={lift} />
-                    <span style={{ fontFamily: "'Oswald', sans-serif", fontSize: 14, textTransform: "uppercase", letterSpacing: "0.04em", color: "#e8d9c5", fontWeight: 600 }}>
+                    <span style={{ fontFamily: "'Oswald', sans-serif", fontSize: 14, textTransform: "uppercase", letterSpacing: "0.04em", color: "var(--cb-accent)", fontWeight: 600 }}>
                       {LIFT_META[lift].label}
                     </span>
                   </div>
                   {!liftHasData ? (
-                    <div style={{ color: "#726b5f", fontSize: 12, padding: "16px 0", textAlign: "center" }}>No sets logged yet</div>
+                    <div style={{ color: "var(--cb-text-faint)", fontSize: 12, padding: "16px 0", textAlign: "center" }}>No sets logged yet</div>
                   ) : (
                     <>
                       <div style={{ display: "flex", gap: 18, marginBottom: 10 }}>
                         <div>
-                          <div style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.06em", color: "#726b5f", fontFamily: "'Oswald', sans-serif" }}>Best E1RM</div>
-                          <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 22, fontWeight: 600, color: "#e8d9c5" }}>
-                            {b.e1rm || "—"} <span style={{ fontSize: 11, color: "#8a8378", fontFamily: "'IBM Plex Mono', monospace" }}>{unitLabel(unit)}</span>
+                          <div style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--cb-text-faint)", fontFamily: "'Oswald', sans-serif" }}>Best E1RM</div>
+                          <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 22, fontWeight: 600, color: "var(--cb-accent)" }}>
+                            {b.e1rm || "—"} <span style={{ fontSize: 11, color: "var(--cb-text-muted-2)", fontFamily: "'IBM Plex Mono', monospace" }}>{unitLabel(unit)}</span>
                           </div>
                         </div>
                         <div>
-                          <div style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.06em", color: "#726b5f", fontFamily: "'Oswald', sans-serif" }}>Heaviest Weight</div>
-                          <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 22, fontWeight: 600, color: "#e8d9c5" }}>
-                            {b.weight || "—"} <span style={{ fontSize: 11, color: "#8a8378", fontFamily: "'IBM Plex Mono', monospace" }}>{unitLabel(unit)}</span>
+                          <div style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--cb-text-faint)", fontFamily: "'Oswald', sans-serif" }}>Heaviest Weight</div>
+                          <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 22, fontWeight: 600, color: "var(--cb-accent)" }}>
+                            {b.weight || "—"} <span style={{ fontSize: 11, color: "var(--cb-text-muted-2)", fontFamily: "'IBM Plex Mono', monospace" }}>{unitLabel(unit)}</span>
                           </div>
                         </div>
                       </div>
                       <div style={{ width: "100%", height: 130 }}>
                         <ResponsiveContainer>
                           <LineChart data={prData.series} margin={{ top: 4, right: 8, bottom: 0, left: -28 }}>
-                            <CartesianGrid stroke="#2a2824" strokeDasharray="3 3" />
-                            <XAxis dataKey="week" stroke="#726b5f" fontSize={9} tickLine={false} />
-                            <YAxis stroke="#726b5f" fontSize={9} tickLine={false} domain={["auto", "auto"]} />
-                            <Tooltip contentStyle={{ background: "#211f1c", border: "1px solid #3a3733", fontFamily: "'IBM Plex Mono', monospace", fontSize: 11 }} labelFormatter={(w) => `Week ${w}`} />
+                            <CartesianGrid stroke="var(--cb-border)" strokeDasharray="3 3" />
+                            <XAxis dataKey="week" stroke="var(--cb-text-faint)" fontSize={9} tickLine={false} />
+                            <YAxis stroke="var(--cb-text-faint)" fontSize={9} tickLine={false} domain={["auto", "auto"]} />
+                            <Tooltip contentStyle={{ background: "var(--cb-surface-2)", border: "1px solid var(--cb-border-strong)", fontFamily: "'IBM Plex Mono', monospace", fontSize: 11 }} labelFormatter={(w) => `Week ${w}`} />
                             <Line type="monotone" dataKey={`${lift}_e1rm`} stroke={LIFT_META[lift].color} dot={{ r: 2 }} connectNulls name="E1RM" strokeWidth={2} />
                             <Line type="monotone" dataKey={`${lift}_weight`} stroke={LIFT_META[lift].color} strokeDasharray="4 3" dot={{ r: 2 }} connectNulls name="Heaviest" strokeWidth={1.5} strokeOpacity={0.6} />
                           </LineChart>
                         </ResponsiveContainer>
                       </div>
-                      <div style={{ display: "flex", gap: 14, marginTop: 4, justifyContent: "center", fontSize: 10, color: "#8a8378", fontFamily: "'IBM Plex Mono', monospace" }}>
+                      <div style={{ display: "flex", gap: 14, marginTop: 4, justifyContent: "center", fontSize: 10, color: "var(--cb-text-muted-2)", fontFamily: "'IBM Plex Mono', monospace" }}>
                         <span>— E1RM</span>
                         <span style={{ opacity: 0.7 }}>┄ Heaviest</span>
                       </div>
@@ -2087,18 +2115,18 @@ function InsightsView({ unit, roundToLb, roundToKg, sessions, loadingData }) {
 
       <CollapsibleSection title="Adherence" defaultOpen={false}>
         {loadingData ? (
-          <div style={{ color: "#726b5f", fontSize: 13 }}>Loading…</div>
+          <div style={{ color: "var(--cb-text-faint)", fontSize: 13 }}>Loading…</div>
         ) : (
           <div style={{ display: "grid", gridTemplateColumns: "40px repeat(4, 1fr)", gap: 4, maxWidth: 420 }}>
             <div />
             {ALL_DAYS.map((d) => (
-              <div key={d} style={{ textAlign: "center", fontSize: 10, color: "#726b5f", fontFamily: "'IBM Plex Mono', monospace" }}>
+              <div key={d} style={{ textAlign: "center", fontSize: 10, color: "var(--cb-text-faint)", fontFamily: "'IBM Plex Mono', monospace" }}>
                 D{d}
               </div>
             ))}
             {ALL_WEEKS.map((week) => (
               <React.Fragment key={week}>
-                <div style={{ fontSize: 10, color: "#726b5f", fontFamily: "'IBM Plex Mono', monospace", display: "flex", alignItems: "center" }}>
+                <div style={{ fontSize: 10, color: "var(--cb-text-faint)", fontFamily: "'IBM Plex Mono', monospace", display: "flex", alignItems: "center" }}>
                   {week === 16 ? "Tp" : `W${week}`}
                 </div>
                 {ALL_DAYS.map((day) => {
@@ -2112,8 +2140,8 @@ function InsightsView({ unit, roundToLb, roundToKg, sessions, loadingData }) {
                       style={{
                         aspectRatio: "1",
                         borderRadius: 3,
-                        background: empty ? "#1a1815" : `rgba(200,85,61,${alpha})`,
-                        border: "1px solid #2a2824",
+                        background: empty ? "var(--cb-surface)" : `rgba(200,85,61,${alpha})`,
+                        border: "1px solid var(--cb-border)",
                       }}
                     />
                   );
@@ -2175,8 +2203,8 @@ function ExerciseHistoryModal({ exercise, sessions, unit, roundToLb, roundToKg, 
       <div
         onClick={(e) => e.stopPropagation()}
         style={{
-          background: "#1a1815",
-          border: "1px solid #3a3733",
+          background: "var(--cb-surface)",
+          border: "1px solid var(--cb-border-strong)",
           borderRadius: 8,
           width: "100%",
           maxWidth: 460,
@@ -2186,59 +2214,59 @@ function ExerciseHistoryModal({ exercise, sessions, unit, roundToLb, roundToKg, 
           boxShadow: "0 20px 50px rgba(0,0,0,0.6)",
         }}
       >
-        <div style={{ padding: "16px 18px 12px", borderBottom: "1px solid #2a2824", display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10 }}>
+        <div style={{ padding: "16px 18px 12px", borderBottom: "1px solid var(--cb-border)", display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10 }}>
           <div style={{ minWidth: 0 }}>
             <div style={{ display: "flex", alignItems: "center" }}>
               <LiftBadge lift={lift} />
-              <span style={{ fontFamily: "'Oswald', sans-serif", fontSize: 17, fontWeight: 600, color: "#f2ede4", wordBreak: "break-word" }}>{exercise}</span>
+              <span style={{ fontFamily: "'Oswald', sans-serif", fontSize: 17, fontWeight: 600, color: "var(--cb-text-primary)", wordBreak: "break-word" }}>{exercise}</span>
             </div>
             {rows.length > 0 && (
               <div style={{ display: "flex", gap: 16, marginTop: 8 }}>
                 <div>
-                  <div style={{ fontSize: 9, textTransform: "uppercase", color: "#726b5f", fontFamily: "'Oswald', sans-serif" }}>Heaviest</div>
-                  <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 13, color: "#e8d9c5" }}>
+                  <div style={{ fontSize: 9, textTransform: "uppercase", color: "var(--cb-text-faint)", fontFamily: "'Oswald', sans-serif" }}>Heaviest</div>
+                  <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 13, color: "var(--cb-accent)" }}>
                     {bestWeight ? `${Math.round(bestWeight * 10) / 10} ${unitLabel(unit)}` : "—"}
                   </div>
                 </div>
                 {bestE1rm > 0 && (
                   <div>
-                    <div style={{ fontSize: 9, textTransform: "uppercase", color: "#726b5f", fontFamily: "'Oswald', sans-serif" }}>Best E1RM</div>
-                    <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 13, color: "#e8d9c5" }}>{Math.round(bestE1rm)} {unitLabel(unit)}</div>
+                    <div style={{ fontSize: 9, textTransform: "uppercase", color: "var(--cb-text-faint)", fontFamily: "'Oswald', sans-serif" }}>Best E1RM</div>
+                    <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 13, color: "var(--cb-accent)" }}>{Math.round(bestE1rm)} {unitLabel(unit)}</div>
                   </div>
                 )}
                 <div>
-                  <div style={{ fontSize: 9, textTransform: "uppercase", color: "#726b5f", fontFamily: "'Oswald', sans-serif" }}>Times logged</div>
-                  <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 13, color: "#e8d9c5" }}>{rows.length}</div>
+                  <div style={{ fontSize: 9, textTransform: "uppercase", color: "var(--cb-text-faint)", fontFamily: "'Oswald', sans-serif" }}>Times logged</div>
+                  <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 13, color: "var(--cb-accent)" }}>{rows.length}</div>
                 </div>
               </div>
             )}
           </div>
-          <button onClick={onClose} style={{ background: "transparent", border: "none", color: "#726b5f", fontSize: 22, lineHeight: 1, cursor: "pointer", flexShrink: 0 }}>
+          <button onClick={onClose} style={{ background: "transparent", border: "none", color: "var(--cb-text-faint)", fontSize: 22, lineHeight: 1, cursor: "pointer", flexShrink: 0 }}>
             ×
           </button>
         </div>
         <div style={{ overflowY: "auto", padding: "6px 0" }}>
           {rows.length === 0 ? (
-            <div style={{ padding: "24px 18px", color: "#726b5f", fontSize: 13, textAlign: "center" }}>Nothing logged for this exercise yet.</div>
+            <div style={{ padding: "24px 18px", color: "var(--cb-text-faint)", fontSize: 13, textAlign: "center" }}>Nothing logged for this exercise yet.</div>
           ) : (
             rows.map((r, i) => {
               const wDisplay = r.log.w != null ? lbToDisplayRaw(r.log.w, unit) : null;
               const label = r.week === 16 ? (TAPER_LABELS_SORTED[r.day - 1] || "").replace(/ from Competition/i, "") : `Week ${r.week} · Day ${r.day}`;
               return (
-                <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 18px", borderBottom: "1px solid #232120", gap: 10 }}>
+                <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 18px", borderBottom: "1px solid var(--cb-border-2)", gap: 10 }}>
                   <div style={{ minWidth: 0 }}>
-                    <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 13, color: "#c9c2b6" }}>{label}</div>
-                    {r.date && <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "#726b5f", marginTop: 2 }}>{r.date}</div>}
+                    <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 13, color: "var(--cb-text-secondary)" }}>{label}</div>
+                    {r.date && <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "var(--cb-text-faint)", marginTop: 2 }}>{r.date}</div>}
                   </div>
                   <div style={{ textAlign: "right", flexShrink: 0 }}>
                     {wDisplay != null || r.log.r != null || r.log.rpe != null ? (
-                      <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 13, color: "#e8d9c5" }}>
+                      <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 13, color: "var(--cb-accent)" }}>
                         {wDisplay != null ? `${wDisplay} ${unitLabel(unit)}` : "—"}
                         {r.log.r != null ? ` × ${r.log.r}` : ""}
                         {r.log.rpe != null ? ` @${r.log.rpe}` : ""}
                       </div>
                     ) : (
-                      <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: "#726b5f" }}>Checked off, no data</div>
+                      <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: "var(--cb-text-faint)" }}>Checked off, no data</div>
                     )}
                   </div>
                 </div>
@@ -2310,21 +2338,21 @@ function CalendarView({ sessions, loadingData, onJumpToSession }) {
   return (
     <div style={{ marginTop: 18 }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-        <button onClick={() => changeMonth(-1)} style={{ background: "transparent", border: "1px solid #3a3733", borderRadius: 6, color: "#c9c2b6", padding: "10px 16px", fontSize: 20, lineHeight: 1, cursor: "pointer" }}>
+        <button onClick={() => changeMonth(-1)} style={{ background: "transparent", border: "1px solid var(--cb-border-strong)", borderRadius: 6, color: "var(--cb-text-secondary)", padding: "10px 16px", fontSize: 20, lineHeight: 1, cursor: "pointer" }}>
           ‹
         </button>
-        <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 15, fontWeight: 600, color: "#e8d9c5", textTransform: "uppercase", letterSpacing: "0.04em" }}>{monthName}</div>
-        <button onClick={() => changeMonth(1)} style={{ background: "transparent", border: "1px solid #3a3733", borderRadius: 6, color: "#c9c2b6", padding: "10px 16px", fontSize: 20, lineHeight: 1, cursor: "pointer" }}>
+        <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 15, fontWeight: 600, color: "var(--cb-accent)", textTransform: "uppercase", letterSpacing: "0.04em" }}>{monthName}</div>
+        <button onClick={() => changeMonth(1)} style={{ background: "transparent", border: "1px solid var(--cb-border-strong)", borderRadius: 6, color: "var(--cb-text-secondary)", padding: "10px 16px", fontSize: 20, lineHeight: 1, cursor: "pointer" }}>
           ›
         </button>
       </div>
       {loadingData ? (
-        <div style={{ color: "#726b5f", fontSize: 13, padding: 20 }}>Loading sessions…</div>
+        <div style={{ color: "var(--cb-text-faint)", fontSize: 13, padding: 20 }}>Loading sessions…</div>
       ) : (
         <>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4, marginBottom: 4 }}>
             {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => (
-              <div key={i} style={{ textAlign: "center", fontSize: 10, color: "#726b5f", fontFamily: "'IBM Plex Mono', monospace" }}>
+              <div key={i} style={{ textAlign: "center", fontSize: 10, color: "var(--cb-text-faint)", fontFamily: "'IBM Plex Mono', monospace" }}>
                 {d}
               </div>
             ))}
@@ -2343,7 +2371,7 @@ function CalendarView({ sessions, loadingData, onJumpToSession }) {
                   style={{
                     aspectRatio: "1",
                     borderRadius: 6,
-                    border: isToday ? "1px solid #c8553d" : "1px solid #2a2824",
+                    border: isToday ? "1px solid var(--cb-rust)" : "1px solid var(--cb-border)",
                     background: matches ? "rgba(200,85,61,0.22)" : "transparent",
                     display: "flex",
                     flexDirection: "column",
@@ -2352,17 +2380,17 @@ function CalendarView({ sessions, loadingData, onJumpToSession }) {
                     cursor: matches ? "pointer" : "default",
                     fontFamily: "'IBM Plex Mono', monospace",
                     fontSize: 12,
-                    color: matches ? "#e8d9c5" : "#726b5f",
+                    color: matches ? "var(--cb-accent)" : "var(--cb-text-faint)",
                   }}
                 >
                   {day}
-                  {matches && <div style={{ width: 4, height: 4, borderRadius: "50%", background: "#c8553d", marginTop: 2 }} />}
+                  {matches && <div style={{ width: 4, height: 4, borderRadius: "50%", background: "var(--cb-rust)", marginTop: 2 }} />}
                 </div>
               );
             })}
           </div>
           {!mostRecentDate && (
-            <div style={{ marginTop: 16, color: "#726b5f", fontSize: 13, textAlign: "center", border: "1px dashed #3a3733", borderRadius: 6, padding: 20 }}>
+            <div style={{ marginTop: 16, color: "var(--cb-text-faint)", fontSize: 13, textAlign: "center", border: "1px dashed var(--cb-border-strong)", borderRadius: 6, padding: 20 }}>
               No completed sessions have a date yet — mark a set done in the Log tab to get started.
             </div>
           )}
@@ -2386,6 +2414,7 @@ export default function CalgaryBarbellApp() {
   const [unit, setUnit] = useState("lb");
   const [barType, setBarType] = useState("standard");
   const [startDate, setStartDate] = useState("");
+  const [theme, setTheme] = useState("dark");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [settingsLoaded, setSettingsLoaded] = useState(false);
 
@@ -2438,14 +2467,15 @@ export default function CalgaryBarbellApp() {
         if (saved.unit) setUnit(saved.unit);
         if (saved.barType) setBarType(saved.barType);
         if (saved.startDate) setStartDate(saved.startDate);
+        if (saved.theme) setTheme(saved.theme);
       }
       setSettingsLoaded(true);
     })();
   }, []);
   useEffect(() => {
     if (!settingsLoaded) return;
-    storageSet("settings", { maxesLb, roundToLb, roundToKg, unit, barType, startDate });
-  }, [maxesLb, roundToLb, roundToKg, unit, barType, startDate, settingsLoaded]);
+    storageSet("settings", { maxesLb, roundToLb, roundToKg, unit, barType, startDate, theme });
+  }, [maxesLb, roundToLb, roundToKg, unit, barType, startDate, theme, settingsLoaded]);
 
   /* ---- load the whole program's session history once, for Insights / Calendar / drill-down ---- */
   useEffect(() => {
@@ -2652,8 +2682,8 @@ export default function CalgaryBarbellApp() {
     <div
       style={{
         fontFamily: "'IBM Plex Mono', monospace",
-        background: "#141311",
-        color: "#f2ede4",
+        background: "var(--cb-bg)",
+        color: "var(--cb-text-primary)",
         borderRadius: 8,
         position: "relative",
         maxWidth: "100%",
@@ -2664,13 +2694,67 @@ export default function CalgaryBarbellApp() {
         flexDirection: "column",
         height: "100vh",
       }}
-      className="cb-app"
+      className={`cb-app${theme === "light" ? " cb-theme-light" : ""}`}
     >
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
         * { box-sizing: border-box; }
         input[type=number]::-webkit-inner-spin-button { opacity: 1; }
         input[type=date] { color-scheme: dark; }
+        .cb-theme-light input[type=date] { color-scheme: light; }
+
+        .cb-app {
+          --cb-bg: #141311;
+          --cb-surface: #1a1815;
+          --cb-surface-2: #211f1c;
+          --cb-border: #2a2824;
+          --cb-border-strong: #3a3733;
+          --cb-border-muted: #5a564d;
+          --cb-border-2: #232120;
+          --cb-text-primary: #f2ede4;
+          --cb-text-secondary: #c9c2b6;
+          --cb-text-muted: #a89f90;
+          --cb-text-muted-2: #8a8378;
+          --cb-text-faint: #726b5f;
+          --cb-accent: #e8d9c5;
+          --cb-text-on-accent: #1c1a17;
+          --cb-rust: #c8553d;
+          --cb-blue: #3d7ea6;
+          --cb-gold: #e0a458;
+          --cb-green: #4a8752;
+          --cb-green-light: #7fae7a;
+          --cb-green-text: #a8d4a0;
+          --cb-text-on-green: #0f1710;
+          --cb-medal-gold: #d4af37;
+          --cb-medal-ribbon: #8a6d1f;
+          --cb-rust-light-text: #e8b199;
+        }
+        .cb-app.cb-theme-light {
+          --cb-bg: #f5f1e8;
+          --cb-surface: #ffffff;
+          --cb-surface-2: #efe8da;
+          --cb-border: #e3ddd0;
+          --cb-border-strong: #cfc6b4;
+          --cb-border-muted: #b0a68f;
+          --cb-border-2: #e8e2d5;
+          --cb-text-primary: #1c1a17;
+          --cb-text-secondary: #45403a;
+          --cb-text-muted: #6b6459;
+          --cb-text-muted-2: #7a7266;
+          --cb-text-faint: #948c7d;
+          --cb-accent: #a8432e;
+          --cb-text-on-accent: #fbf8f2;
+          --cb-rust: #b8492f;
+          --cb-blue: #2f688a;
+          --cb-gold: #b9812f;
+          --cb-green: #3f7546;
+          --cb-green-light: #6ea369;
+          --cb-green-text: #2f6b37;
+          --cb-text-on-green: #f7f3ec;
+          --cb-medal-gold: #c49a2e;
+          --cb-medal-ribbon: #7a5f1a;
+          --cb-rust-light-text: #8a3d26;
+        }
 
         .cb-app { height: 100vh; }
         @supports (height: 100dvh) {
@@ -2715,10 +2799,10 @@ export default function CalgaryBarbellApp() {
       <div className="cb-topbar" style={{ flexShrink: 0, padding: "22px 18px 0" }}>
       <div className="cb-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", position: "relative", flexWrap: "wrap", rowGap: 10 }}>
         <div style={{ minWidth: 0 }}>
-          <div className="cb-title-eyebrow" style={{ fontFamily: "'Oswald', sans-serif", fontSize: 11, letterSpacing: "0.25em", color: "#c8553d", textTransform: "uppercase" }}>
+          <div className="cb-title-eyebrow" style={{ fontFamily: "'Oswald', sans-serif", fontSize: 11, letterSpacing: "0.25em", color: "var(--cb-rust)", textTransform: "uppercase" }}>
             Calgary Barbell
           </div>
-          <div className="cb-title-main" style={{ fontFamily: "'Oswald', sans-serif", fontSize: 30, fontWeight: 700, letterSpacing: "0.01em", color: "#f2ede4", lineHeight: 1.1 }}>
+          <div className="cb-title-main" style={{ fontFamily: "'Oswald', sans-serif", fontSize: 30, fontWeight: 700, letterSpacing: "0.01em", color: "var(--cb-text-primary)", lineHeight: 1.1 }}>
             16-Week Program
           </div>
         </div>
@@ -2731,9 +2815,9 @@ export default function CalgaryBarbellApp() {
                 width: 40,
                 height: 40,
                 borderRadius: "50%",
-                border: "1px solid #3a3733",
-                background: "#211f1c",
-                color: "#e8d9c5",
+                border: "1px solid var(--cb-border-strong)",
+                background: "var(--cb-surface-2)",
+                color: "var(--cb-accent)",
                 cursor: "pointer",
                 display: "flex",
                 alignItems: "center",
@@ -2753,6 +2837,7 @@ export default function CalgaryBarbellApp() {
               unit={unit}
               barType={barType}
               startDate={startDate}
+              theme={theme}
               onChange={(patch) => {
                 if ("maxesLb" in patch) setMaxesLb(patch.maxesLb);
                 if ("roundToLb" in patch) setRoundToLb(patch.roundToLb);
@@ -2760,6 +2845,7 @@ export default function CalgaryBarbellApp() {
                 if ("unit" in patch) setUnit(patch.unit);
                 if ("barType" in patch) setBarType(patch.barType);
                 if ("startDate" in patch) setStartDate(patch.startDate);
+                if ("theme" in patch) setTheme(patch.theme);
               }}
               open={settingsOpen}
               onClose={() => setSettingsOpen(false)}
@@ -2771,7 +2857,7 @@ export default function CalgaryBarbellApp() {
       </div>
 
       {/* Text tabs — shown on regular/desktop widths */}
-      <div className="cb-tabnav-desktop" style={{ marginTop: 20, display: "flex", gap: 6, flexWrap: "wrap", rowGap: 10, borderBottom: "1px solid #2a2824", paddingBottom: 10 }}>
+      <div className="cb-tabnav-desktop" style={{ marginTop: 20, display: "flex", gap: 6, flexWrap: "wrap", rowGap: 10, borderBottom: "1px solid var(--cb-border)", paddingBottom: 10 }}>
         {NAV_TABS.map((m) => (
           <button
             key={m.value}
@@ -2780,9 +2866,9 @@ export default function CalgaryBarbellApp() {
               padding: "6px 4px",
               marginRight: 14,
               border: "none",
-              borderBottom: mode === m.value ? "2px solid #c8553d" : "2px solid transparent",
+              borderBottom: mode === m.value ? "2px solid var(--cb-rust)" : "2px solid transparent",
               background: "transparent",
-              color: mode === m.value ? "#f2ede4" : "#726b5f",
+              color: mode === m.value ? "var(--cb-text-primary)" : "var(--cb-text-faint)",
               fontFamily: "'Oswald', sans-serif",
               fontSize: 16,
               textTransform: "uppercase",
@@ -2803,7 +2889,7 @@ export default function CalgaryBarbellApp() {
           marginTop: 16,
           gridTemplateColumns: "repeat(5, minmax(0, 1fr))",
           gap: 2,
-          borderBottom: "1px solid #2a2824",
+          borderBottom: "1px solid var(--cb-border)",
           paddingBottom: 8,
         }}
       >
@@ -2822,9 +2908,9 @@ export default function CalgaryBarbellApp() {
                 gap: 4,
                 padding: "8px 2px 8px",
                 border: "none",
-                borderBottom: isActive ? "2px solid #c8553d" : "2px solid transparent",
+                borderBottom: isActive ? "2px solid var(--cb-rust)" : "2px solid transparent",
                 background: "transparent",
-                color: isActive ? "#f2ede4" : "#726b5f",
+                color: isActive ? "var(--cb-text-primary)" : "var(--cb-text-faint)",
                 cursor: "pointer",
                 minWidth: 0,
                 width: "100%",
@@ -2860,18 +2946,18 @@ export default function CalgaryBarbellApp() {
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", rowGap: 8 }}>
               <button
                 onClick={() => setMode("overview")}
-                style={{ background: "transparent", border: "none", color: "#726b5f", cursor: "pointer", fontFamily: "'Oswald', sans-serif", fontSize: 15, textTransform: "uppercase", letterSpacing: "0.04em", padding: "10px 8px", margin: "-10px -8px" }}
+                style={{ background: "transparent", border: "none", color: "var(--cb-text-faint)", cursor: "pointer", fontFamily: "'Oswald', sans-serif", fontSize: 15, textTransform: "uppercase", letterSpacing: "0.04em", padding: "10px 8px", margin: "-10px -8px" }}
               >
                 ‹ Week Overview
               </button>
-              <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 14, color: "#a89f90", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+              <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 14, color: "var(--cb-text-muted)", textTransform: "uppercase", letterSpacing: "0.04em" }}>
                 {isTaper ? taperLabel.replace(/ from Competition/i, "") : `Week ${week} · Day ${day}`}
               </div>
             </div>
 
             <div style={{ marginTop: 14, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
               <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <span style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.06em", color: "#726b5f", fontFamily: "'Oswald', sans-serif", whiteSpace: "nowrap" }}>
+                <span style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--cb-text-faint)", fontFamily: "'Oswald', sans-serif", whiteSpace: "nowrap" }}>
                   Completed
                 </span>
                 <input
@@ -2880,10 +2966,10 @@ export default function CalgaryBarbellApp() {
                   onChange={(e) => updateDate(e.target.value)}
                   style={{
                     padding: "5px 8px",
-                    background: "#1a1815",
-                    border: "1px solid #3a3733",
+                    background: "var(--cb-surface)",
+                    border: "1px solid var(--cb-border-strong)",
                     borderRadius: 3,
-                    color: "#f2ede4",
+                    color: "var(--cb-text-primary)",
                     fontFamily: "'IBM Plex Mono', monospace",
                     fontSize: 12,
                   }}
@@ -2892,19 +2978,19 @@ export default function CalgaryBarbellApp() {
             </div>
 
             <div style={{ marginTop: 12, display: "flex", alignItems: "center", gap: 10 }}>
-              <div style={{ flex: 1, height: 6, background: "#2a2824", borderRadius: 3, overflow: "hidden" }}>
-                <div style={{ width: `${pctDone}%`, height: "100%", background: "#c8553d", transition: "width 0.2s ease" }} />
+              <div style={{ flex: 1, height: 6, background: "var(--cb-border)", borderRadius: 3, overflow: "hidden" }}>
+                <div style={{ width: `${pctDone}%`, height: "100%", background: "var(--cb-rust)", transition: "width 0.2s ease" }} />
               </div>
-              <div style={{ fontSize: 12, color: "#8a8378", minWidth: 46, textAlign: "right" }}>
+              <div style={{ fontSize: 12, color: "var(--cb-text-muted-2)", minWidth: 46, textAlign: "right" }}>
                 {doneCount}/{total}
               </div>
             </div>
           </div>
 
           <div className="cb-scroll-pane" style={{ flex: 1, minHeight: 0, paddingBottom: 140 }}>
-          <div style={{ marginTop: 16, border: "1px solid #2a2824", borderRadius: 6, overflow: "hidden" }}>
+          <div style={{ marginTop: 16, border: "1px solid var(--cb-border)", borderRadius: 6, overflow: "hidden" }}>
             {entries.length === 0 && (
-              <div style={{ padding: 30, textAlign: "center", color: "#726b5f", fontFamily: "'Oswald', sans-serif" }}>
+              <div style={{ padding: 30, textAlign: "center", color: "var(--cb-text-faint)", fontFamily: "'Oswald', sans-serif" }}>
                 No exercises logged for this session.
               </div>
             )}
