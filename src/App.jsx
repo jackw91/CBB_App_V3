@@ -535,7 +535,21 @@ function LoadDisplay({ entry, maxesLb, unit, roundToLb, roundToKg, barType, show
 }
 
 /* small numeric input used in the log-expand panel */
-function LogField({ label, value, onChange, step, placeholder }) {
+function LogField({ label, value, onChange, step, placeholder, min, max }) {
+  const handleChange = (raw) => {
+    if (raw === "") {
+      onChange(null);
+      return;
+    }
+    let n = Number(raw);
+    if (Number.isNaN(n)) {
+      onChange(null);
+      return;
+    }
+    if (min != null && n < min) n = min;
+    if (max != null && n > max) n = max;
+    onChange(n);
+  };
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 4, flex: "1 1 0", minWidth: 0 }}>
       <span style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--cb-text-faint)", fontFamily: "'Oswald', sans-serif" }}>
@@ -544,9 +558,11 @@ function LogField({ label, value, onChange, step, placeholder }) {
       <input
         type="number"
         step={step || 1}
+        min={min}
+        max={max}
         value={value ?? ""}
         placeholder={placeholder || "-"}
-        onChange={(e) => onChange(e.target.value === "" ? null : Number(e.target.value))}
+        onChange={(e) => handleChange(e.target.value)}
         onClick={(e) => e.stopPropagation()}
         style={{
           width: "100%",
@@ -798,9 +814,9 @@ function ExerciseRow({ entry, idx, setStates, onToggleSet, log, onLogChange, exp
             </label>
           )}
           <div style={{ display: "flex", gap: 10, flexWrap: "nowrap", alignItems: "flex-end" }}>
-            <LogField label={`Weight (${unitLabel(unit)})`} value={log.w == null ? null : lbToDisplayRaw(log.w, unit)} onChange={(v) => onLogChange(idx, { ...log, w: displayToLb(v, unit) })} step={unit === "kg" ? 1.25 : 2.5} />
-            <LogField label="Reps" value={log.r} onChange={(v) => onLogChange(idx, { ...log, r: v })} step={1} />
-            <LogField label="RPE" value={log.rpe} onChange={(v) => onLogChange(idx, { ...log, rpe: v })} step={0.5} />
+            <LogField label={`Weight (${unitLabel(unit)})`} value={log.w == null ? null : lbToDisplayRaw(log.w, unit)} onChange={(v) => onLogChange(idx, { ...log, w: displayToLb(v, unit) })} step={unit === "kg" ? 1.25 : 2.5} min={0} />
+            <LogField label="Reps" value={log.r} onChange={(v) => onLogChange(idx, { ...log, r: v })} step={1} min={1} max={50} />
+            <LogField label="RPE" value={log.rpe} onChange={(v) => onLogChange(idx, { ...log, rpe: v })} step={0.5} min={1} max={10} />
           </div>
         </div>
       )}
@@ -921,9 +937,11 @@ function SettingsPanel({ maxesLb, roundToLb, roundToKg, unit, barType, startDate
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
             <input
               type="number"
+              min={0}
               value={displayMax(lift)}
               onChange={(e) => {
-                const v = e.target.value === "" ? "" : Number(e.target.value);
+                let v = e.target.value === "" ? "" : Number(e.target.value);
+                if (v !== "" && v < 0) v = 0;
                 const lb = v === "" ? "" : unit === "kg" ? kgToLb(v) : v;
                 onChange({ maxesLb: { ...maxesLb, [lift]: lb } });
               }}
@@ -2417,6 +2435,18 @@ export default function CalgaryBarbellApp() {
   const [startDate, setStartDate] = useState("");
   const [theme, setTheme] = useState("dark");
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const settingsRef = useRef(null);
+
+  useEffect(() => {
+    if (!settingsOpen) return;
+    const handlePointerDown = (e) => {
+      if (settingsRef.current && !settingsRef.current.contains(e.target)) {
+        setSettingsOpen(false);
+      }
+    };
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
+  }, [settingsOpen]);
   const [settingsLoaded, setSettingsLoaded] = useState(false);
 
   const [session, setSession] = useState(EMPTY_SESSION());
@@ -2453,6 +2483,14 @@ export default function CalgaryBarbellApp() {
         if (saved.barType) setBarType(saved.barType);
         if (saved.startDate) setStartDate(saved.startDate);
         if (saved.theme) setTheme(saved.theme);
+      } else if (typeof window !== "undefined" && window.matchMedia) {
+        // No saved preference yet — match the device's system theme once,
+        // rather than always defaulting to dark.
+        try {
+          if (window.matchMedia("(prefers-color-scheme: light)").matches) setTheme("light");
+        } catch (e) {
+          /* matchMedia unavailable — keep the dark default */
+        }
       }
       setSettingsLoaded(true);
     })();
@@ -2793,7 +2831,7 @@ export default function CalgaryBarbellApp() {
         </div>
         <div className="cb-header-actions" style={{ display: "flex", alignItems: "center", gap: 8 }}>
 
-          <div style={{ position: "relative" }}>
+          <div ref={settingsRef} style={{ position: "relative" }}>
             <button
               onClick={() => setSettingsOpen((o) => !o)}
               style={{
