@@ -326,6 +326,27 @@ function computeNextWorkout(allSessions) {
   return nextIndex < sequence.length ? sequence[nextIndex] : null;
 }
 
+/* The all-time heaviest logged weight per exercise, across every session
+   regardless of program start date — the single source of truth for what
+   counts as a PB. Shared by the Log tab's PB medal and the Exercises tab's
+   PB stat, so the two can never drift out of sync. */
+function computeAllTimeBestWeights(allSessions) {
+  const map = {};
+  for (const key of Object.keys(allSessions || {})) {
+    const [weekStr, dayStr] = key.split(":");
+    const week = Number(weekStr);
+    const day = Number(dayStr);
+    const session = allSessions[key];
+    const entries = getEntriesAbs(week, day);
+    entries.forEach((entry, idx) => {
+      const log = session.logs?.[idx];
+      if (!log || log.w == null) return;
+      if (!map[entry.exercise] || log.w > map[entry.exercise]) map[entry.exercise] = log.w;
+    });
+  }
+  return map;
+}
+
 /* ============================= SMALL UI PIECES ============================= */
 function LiftBadge({ lift }) {
   const meta = LIFT_META[lift];
@@ -1660,27 +1681,31 @@ function ExercisesView({ initialSearch, onConsumeInitialSearch, allSessions, sta
      it's been logged with actual weight & reps, total tonnage, best single
      weight, best E1RM, and the full chronological history for the chart.
      Restricted to sessions on/after the entered program start date, when set. */
+  const allTimeBestWeightLb = useMemo(() => computeAllTimeBestWeights(allSessions), [allSessions]);
+
   const statsByExercise = useMemo(() => {
     const map = {};
     ALL_EXERCISES.forEach(({ exercise }) => {
-      map[exercise] = { timesPerformed: 0, totalTonnageLb: 0, bestWeightLb: 0, bestE1rmLb: 0, history: [] };
+      map[exercise] = {
+        timesPerformed: 0,
+        totalTonnageLb: 0,
+        bestWeightLb: allTimeBestWeightLb[exercise] || 0,
+        bestE1rmLb: 0,
+        history: [],
+      };
     });
     for (const key of Object.keys(allSessions || {})) {
       const [weekStr, dayStr] = key.split(":");
       const week = Number(weekStr);
       const day = Number(dayStr);
       const session = allSessions[key];
-      const inWindow = !startDate || (session.date && session.date >= startDate);
+      if (startDate && (!session.date || session.date < startDate)) continue;
       const entries = getEntriesAbs(week, day);
       entries.forEach((entry, idx) => {
         const stat = map[entry.exercise];
         if (!stat) return;
         const log = session.logs?.[idx];
         if (!log || log.w == null || log.r == null) return;
-        // PB is always the true all-time best, regardless of the start-date
-        // window, to match how the Log tab flags a PB set.
-        if (log.w > stat.bestWeightLb) stat.bestWeightLb = log.w;
-        if (!inWindow) return;
         stat.timesPerformed += 1;
         const sets = Number(entry.sets) || 0;
         stat.totalTonnageLb += sets * log.r * log.w;
@@ -1691,7 +1716,7 @@ function ExercisesView({ initialSearch, onConsumeInitialSearch, allSessions, sta
     }
     Object.values(map).forEach((s) => s.history.sort((a, b) => a.week - b.week || a.day - b.day));
     return map;
-  }, [allSessions, startDate]);
+  }, [allSessions, startDate, allTimeBestWeightLb]);
 
   const visibleExercises = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -1861,7 +1886,7 @@ function ExercisesView({ initialSearch, onConsumeInitialSearch, allSessions, sta
 }
 
 /* ============================= INSIGHTS (E1RM CHART + HEATMAP) ============================= */
-function InsightsView({ unit, roundToLb, roundToKg, sessions, loadingData }) {
+function InsightsView({ unit, sessions, loadingData }) {
   const chartData = useMemo(() => {
     const perWeek = {}; // week -> {squat, bench, deadlift}
     for (let w = 1; w <= 16; w++) perWeek[w] = { week: w };
@@ -2132,7 +2157,7 @@ function InsightsView({ unit, roundToLb, roundToKg, sessions, loadingData }) {
 }
 
 /* ============================= EXERCISE HISTORY DRILL-DOWN ============================= */
-function ExerciseHistoryModal({ exercise, sessions, unit, roundToLb, roundToKg, onClose }) {
+function ExerciseHistoryModal({ exercise, sessions, unit, onClose }) {
   const rows = useMemo(() => {
     const out = [];
     for (const key of Object.keys(sessions)) {
@@ -2406,25 +2431,9 @@ export default function CalgaryBarbellApp() {
 
   const nextWorkout = useMemo(() => computeNextWorkout(allSessions), [allSessions]);
 
-  /* All-time heaviest logged weight per exercise (not restricted to the
-     program start date, unlike the Exercises tab stats) — used to flag a
-     set in the Log tab as a PB the moment it ties or beats it. */
-  const exerciseBestWeightLb = useMemo(() => {
-    const map = {};
-    for (const key of Object.keys(allSessions)) {
-      const [weekStr, dayStr] = key.split(":");
-      const week = Number(weekStr);
-      const day = Number(dayStr);
-      const session = allSessions[key];
-      const dayEntries = getEntriesAbs(week, day);
-      dayEntries.forEach((entry, idx) => {
-        const log = session.logs?.[idx];
-        if (!log || log.w == null) return;
-        if (!map[entry.exercise] || log.w > map[entry.exercise]) map[entry.exercise] = log.w;
-      });
-    }
-    return map;
-  }, [allSessions]);
+  /* All-time heaviest logged weight per exercise — used to flag a set in
+     the Log tab as a PB the moment it ties or beats it. */
+  const exerciseBestWeightLb = useMemo(() => computeAllTimeBestWeights(allSessions), [allSessions]);
 
   const isTaper = phase === "Taper Week";
   const absWeek = isTaper ? 16 : Number(week);
@@ -3033,7 +3042,7 @@ export default function CalgaryBarbellApp() {
 
       {mode === "insights" && (
         <div className="cb-scroll-pane" style={{ flex: 1, minHeight: 0, paddingTop: 16, paddingBottom: 24 }}>
-          <InsightsView unit={unit} roundToLb={roundToLb} roundToKg={roundToKg} sessions={allSessions} loadingData={loadingHistory} />
+          <InsightsView unit={unit} sessions={allSessions} loadingData={loadingHistory} />
         </div>
       )}
       </div>
@@ -3060,8 +3069,6 @@ export default function CalgaryBarbellApp() {
           exercise={historyExercise}
           sessions={allSessions}
           unit={unit}
-          roundToLb={roundToLb}
-          roundToKg={roundToKg}
           onClose={() => setHistoryExercise(null)}
         />
       )}
