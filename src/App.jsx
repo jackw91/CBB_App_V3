@@ -463,7 +463,7 @@ function LoadDisplay({ entry, maxesLb, unit, roundToLb, roundToKg, barType, show
     const plates = w && showPlates ? platesPerSide(w, unit, barType) : [];
     return (
       <div style={{ textAlign: "right", marginLeft: "auto" }}>
-        <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 22, fontWeight: 600, color: "var(--cb-accent)" }}>
+        <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 22, fontWeight: 600, color: "var(--cb-text-primary)" }}>
           {w ? `${w}` : "—"}
           <span style={{ fontSize: 12, color: "var(--cb-text-muted-2)", marginLeft: 4, fontFamily: "'IBM Plex Mono', monospace" }}>
             {unitLabel(unit)} · {Math.round(entry.pct * 100)}%
@@ -480,7 +480,7 @@ function LoadDisplay({ entry, maxesLb, unit, roundToLb, roundToKg, barType, show
   if (entry.type === "rpe") {
     return (
       <div style={{ textAlign: "right", marginLeft: "auto" }}>
-        <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 20, fontWeight: 600, color: "var(--cb-accent)" }}>
+        <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 20, fontWeight: 600, color: "var(--cb-text-primary)" }}>
           {entry.label.replace(/RPE/i, "")}
           <span style={{ fontSize: 12, color: "var(--cb-text-muted-2)", marginLeft: 3, fontFamily: "'IBM Plex Mono', monospace" }}>RPE</span>
         </div>
@@ -1471,7 +1471,7 @@ const EXERCISE_GROUP_ORDER = [
   { key: "none", label: "Accessory", color: null },
 ];
 
-function ExerciseCard({ exercise, lift, stats, unit, onOpenHistory, loadingData }) {
+function ExerciseCard({ exercise, lift, stats, unit, loadingData }) {
   const description = EXERCISE_DESCRIPTIONS[exercise];
   const [expanded, setExpanded] = useState(false);
   const hasData = stats && stats.timesPerformed > 0;
@@ -1502,7 +1502,7 @@ function ExerciseCard({ exercise, lift, stats, unit, onOpenHistory, loadingData 
         <div style={{ minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "center" }}>
             <LiftBadge lift={lift} />
-            <span style={{ fontFamily: "'Oswald', sans-serif", fontSize: 15, fontWeight: 600, color: "var(--cb-accent)", wordBreak: "break-word" }}>
+            <span style={{ fontFamily: "'Oswald', sans-serif", fontSize: 15, fontWeight: 600, color: "var(--cb-text-primary)", wordBreak: "break-word" }}>
               {exercise}
             </span>
           </div>
@@ -1520,30 +1520,6 @@ function ExerciseCard({ exercise, lift, stats, unit, onOpenHistory, loadingData 
           </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-          <button
-            className="cb-icon-btn"
-            onClick={() => onOpenHistory(exercise)}
-            aria-label={`View history for ${exercise}`}
-            title="History"
-            style={{
-              width: 34,
-              height: 34,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              background: "var(--cb-surface-2)",
-              border: "1px solid var(--cb-border-strong)",
-              borderRadius: "50%",
-              color: "var(--cb-text-muted)",
-              cursor: "pointer",
-              flexShrink: 0,
-            }}
-          >
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="12" cy="12" r="9" />
-              <path d="M12 7v5l3 2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </button>
           {hasData && (
             <button
               className="cb-icon-btn"
@@ -1580,23 +1556,23 @@ function ExerciseCard({ exercise, lift, stats, unit, onOpenHistory, loadingData 
           <div style={{ display: "flex", flexWrap: "wrap", gap: 16 }}>
             <div>
               <div style={{ fontSize: 9, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--cb-text-faint)", fontFamily: "'Oswald', sans-serif" }}>Times</div>
-              <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 17, fontWeight: 600, color: "var(--cb-accent)" }}>{stats.timesPerformed}</div>
+              <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 17, fontWeight: 600, color: "var(--cb-text-primary)" }}>{stats.timesPerformed}</div>
             </div>
             <div>
               <div style={{ fontSize: 9, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--cb-text-faint)", fontFamily: "'Oswald', sans-serif" }}>Total</div>
-              <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 17, fontWeight: 600, color: "var(--cb-accent)" }}>
+              <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 17, fontWeight: 600, color: "var(--cb-text-primary)" }}>
                 {displayTotal.toLocaleString()} <span style={{ fontSize: 10, color: "var(--cb-text-muted-2)", fontFamily: "'IBM Plex Mono', monospace" }}>{unitLabel(unit)}</span>
               </div>
             </div>
             <div>
               <div style={{ fontSize: 9, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--cb-text-faint)", fontFamily: "'Oswald', sans-serif" }}>PB</div>
-              <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 17, fontWeight: 600, color: "var(--cb-accent)" }}>
+              <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 17, fontWeight: 600, color: "var(--cb-text-primary)" }}>
                 {displayPB} <span style={{ fontSize: 10, color: "var(--cb-text-muted-2)", fontFamily: "'IBM Plex Mono', monospace" }}>{unitLabel(unit)}</span>
               </div>
             </div>
             <div>
               <div style={{ fontSize: 9, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--cb-text-faint)", fontFamily: "'Oswald', sans-serif" }}>E1RM</div>
-              <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 17, fontWeight: 600, color: "var(--cb-accent)" }}>
+              <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 17, fontWeight: 600, color: "var(--cb-text-primary)" }}>
                 {displayE1rm} <span style={{ fontSize: 10, color: "var(--cb-text-muted-2)", fontFamily: "'IBM Plex Mono', monospace" }}>{unitLabel(unit)}</span>
               </div>
             </div>
@@ -1614,7 +1590,7 @@ function ExerciseCard({ exercise, lift, stats, unit, onOpenHistory, loadingData 
                 <YAxis stroke="var(--cb-text-faint)" fontSize={9} tickLine={false} domain={["auto", "auto"]} />
                 <Tooltip contentStyle={{ background: "var(--cb-surface-2)", border: "1px solid var(--cb-border-strong)", fontFamily: "'IBM Plex Mono', monospace", fontSize: 11 }} />
                 <Legend wrapperStyle={{ fontFamily: "'Oswald', sans-serif", fontSize: 11 }} />
-                <Line type="monotone" dataKey="weight" stroke="var(--cb-accent)" dot={{ r: 2 }} name={`Weight (${unitLabel(unit)})`} strokeWidth={2} />
+                <Line type="monotone" dataKey="weight" stroke="var(--cb-text-primary)" dot={{ r: 2 }} name={`Weight (${unitLabel(unit)})`} strokeWidth={2} />
                 <Line type="monotone" dataKey="e1rm" stroke="var(--cb-rust)" dot={{ r: 2 }} name={`E1RM (${unitLabel(unit)})`} strokeWidth={1.5} strokeDasharray="4 3" />
               </LineChart>
             </ResponsiveContainer>
@@ -1635,7 +1611,7 @@ function ExerciseCard({ exercise, lift, stats, unit, onOpenHistory, loadingData 
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
                       {isPB && <PBMedal size={14} />}
-                      <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: "var(--cb-accent)" }}>
+                      <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: "var(--cb-text-primary)" }}>
                         {wDisplay} {unitLabel(unit)} × {h.r} reps
                         {h.rpe != null ? ` @${h.rpe}` : ""}
                       </div>
@@ -1650,7 +1626,7 @@ function ExerciseCard({ exercise, lift, stats, unit, onOpenHistory, loadingData 
   );
 }
 
-function ExercisesView({ onOpenHistory, initialSearch, onConsumeInitialSearch, allSessions, startDate, unit, loadingData }) {
+function ExercisesView({ initialSearch, onConsumeInitialSearch, allSessions, startDate, unit, loadingData }) {
   const [search, setSearch] = useState(() => initialSearch || "");
   const [activeFilters, setActiveFilters] = useState(() => new Set());
   const [collapsedGroups, setCollapsedGroups] = useState(() => new Set(EXERCISE_GROUP_ORDER.map((g) => g.key)));
@@ -1870,7 +1846,7 @@ function ExercisesView({ onOpenHistory, initialSearch, onConsumeInitialSearch, a
                 {isOpen && (
                   <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                     {group.items.map(({ exercise, lift }) => (
-                      <ExerciseCard key={exercise} exercise={exercise} lift={lift} onOpenHistory={onOpenHistory} stats={statsByExercise[exercise]} unit={unit} loadingData={loadingData} />
+                      <ExerciseCard key={exercise} exercise={exercise} lift={lift} stats={statsByExercise[exercise]} unit={unit} loadingData={loadingData} />
                     ))}
                   </div>
                 )}
@@ -2066,7 +2042,7 @@ function InsightsView({ unit, roundToLb, roundToKg, sessions, loadingData }) {
                 <div key={lift} style={{ border: "1px solid var(--cb-border)", borderRadius: 6, padding: 14, background: "var(--cb-surface)" }}>
                   <div style={{ display: "flex", alignItems: "center", marginBottom: 10 }}>
                     <LiftBadge lift={lift} />
-                    <span style={{ fontFamily: "'Oswald', sans-serif", fontSize: 14, textTransform: "uppercase", letterSpacing: "0.04em", color: "var(--cb-accent)", fontWeight: 600 }}>
+                    <span style={{ fontFamily: "'Oswald', sans-serif", fontSize: 14, textTransform: "uppercase", letterSpacing: "0.04em", color: "var(--cb-text-primary)", fontWeight: 600 }}>
                       {LIFT_META[lift].label}
                     </span>
                   </div>
@@ -2077,13 +2053,13 @@ function InsightsView({ unit, roundToLb, roundToKg, sessions, loadingData }) {
                       <div style={{ display: "flex", gap: 18, marginBottom: 10 }}>
                         <div>
                           <div style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--cb-text-faint)", fontFamily: "'Oswald', sans-serif" }}>Best E1RM</div>
-                          <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 22, fontWeight: 600, color: "var(--cb-accent)" }}>
+                          <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 22, fontWeight: 600, color: "var(--cb-text-primary)" }}>
                             {b.e1rm || "—"} <span style={{ fontSize: 11, color: "var(--cb-text-muted-2)", fontFamily: "'IBM Plex Mono', monospace" }}>{unitLabel(unit)}</span>
                           </div>
                         </div>
                         <div>
                           <div style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--cb-text-faint)", fontFamily: "'Oswald', sans-serif" }}>Heaviest Weight</div>
-                          <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 22, fontWeight: 600, color: "var(--cb-accent)" }}>
+                          <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 22, fontWeight: 600, color: "var(--cb-text-primary)" }}>
                             {b.weight || "—"} <span style={{ fontSize: 11, color: "var(--cb-text-muted-2)", fontFamily: "'IBM Plex Mono', monospace" }}>{unitLabel(unit)}</span>
                           </div>
                         </div>
@@ -2095,8 +2071,8 @@ function InsightsView({ unit, roundToLb, roundToKg, sessions, loadingData }) {
                             <XAxis dataKey="week" stroke="var(--cb-text-faint)" fontSize={9} tickLine={false} />
                             <YAxis stroke="var(--cb-text-faint)" fontSize={9} tickLine={false} domain={["auto", "auto"]} />
                             <Tooltip contentStyle={{ background: "var(--cb-surface-2)", border: "1px solid var(--cb-border-strong)", fontFamily: "'IBM Plex Mono', monospace", fontSize: 11 }} labelFormatter={(w) => `Week ${w}`} />
-                            <Line type="monotone" dataKey={`${lift}_e1rm`} stroke={LIFT_META[lift].color} dot={{ r: 2 }} connectNulls name="E1RM" strokeWidth={2} />
-                            <Line type="monotone" dataKey={`${lift}_weight`} stroke={LIFT_META[lift].color} strokeDasharray="4 3" dot={{ r: 2 }} connectNulls name="Heaviest" strokeWidth={1.5} strokeOpacity={0.6} />
+                            <Line type="monotone" dataKey={`${lift}_e1rm`} stroke="var(--cb-text-primary)" strokeDasharray="4 3" dot={{ r: 2 }} connectNulls name="E1RM" strokeWidth={1.5} />
+                            <Line type="monotone" dataKey={`${lift}_weight`} stroke={LIFT_META[lift].color} dot={{ r: 2 }} connectNulls name="Heaviest" strokeWidth={2} />
                           </LineChart>
                         </ResponsiveContainer>
                       </div>
@@ -3040,7 +3016,6 @@ export default function CalgaryBarbellApp() {
 
       {mode === "exercises" && (
         <ExercisesView
-          onOpenHistory={setHistoryExercise}
           initialSearch={pendingExerciseSearch}
           onConsumeInitialSearch={() => setPendingExerciseSearch("")}
           allSessions={allSessions}
