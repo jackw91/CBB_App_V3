@@ -1634,7 +1634,7 @@ function ExerciseCard({ exercise, lift, stats, unit, loadingData }) {
               </LineChart>
             </ResponsiveContainer>
           </div>
-          <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 6 }}>
+          <div className="cb-scroll-pane" style={{ marginTop: 10, maxHeight: 280, display: "flex", flexDirection: "column", gap: 6 }}>
             {stats.history
               .slice()
               .reverse()
@@ -2230,10 +2230,11 @@ function ExerciseHistoryModal({ exercise, sessions, unit, onClose }) {
           maxHeight: "80vh",
           display: "flex",
           flexDirection: "column",
+          overflow: "hidden",
           boxShadow: "0 20px 50px rgba(0,0,0,0.6)",
         }}
       >
-        <div style={{ padding: "16px 18px 12px", borderBottom: "1px solid var(--cb-border)", display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10 }}>
+        <div style={{ flexShrink: 0, padding: "16px 18px 12px", borderBottom: "1px solid var(--cb-border)", display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10 }}>
           <div style={{ minWidth: 0 }}>
             <div style={{ display: "flex", alignItems: "center" }}>
               <LiftBadge lift={lift} />
@@ -2264,7 +2265,7 @@ function ExerciseHistoryModal({ exercise, sessions, unit, onClose }) {
             ×
           </button>
         </div>
-        <div style={{ overflowY: "auto", padding: "6px 0" }}>
+        <div className="cb-scroll-pane" style={{ flex: 1, minHeight: 0, padding: "6px 0" }}>
           {rows.length === 0 ? (
             <div style={{ padding: "24px 18px", color: "var(--cb-text-faint)", fontSize: 13, textAlign: "center" }}>Nothing logged for this exercise yet.</div>
           ) : (
