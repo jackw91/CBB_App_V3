@@ -1500,13 +1500,6 @@ function WeekOverview({ week, allSessions, nextWorkout, maxesLb, unit, roundToLb
 }
 
 /* ============================= EXERCISES (program-wide directory) ============================= */
-const EXERCISE_FILTER_OPTIONS = [
-  { key: "squat", label: "Squat", color: LIFT_META.squat.color },
-  { key: "bench", label: "Bench", color: LIFT_META.bench.color },
-  { key: "deadlift", label: "Deadlift", color: LIFT_META.deadlift.color },
-  { key: "none", label: "Accessory", color: null },
-];
-
 const EXERCISE_GROUP_ORDER = [
   { key: "squat", label: "Squat", color: LIFT_META.squat.color },
   { key: "bench", label: "Bench", color: LIFT_META.bench.color },
@@ -1671,7 +1664,6 @@ function ExerciseCard({ exercise, lift, stats, unit, loadingData }) {
 
 function ExercisesView({ initialSearch, onConsumeInitialSearch, allSessions, startDate, unit, loadingData }) {
   const [search, setSearch] = useState(() => initialSearch || "");
-  const [activeFilters, setActiveFilters] = useState(() => new Set());
   const [collapsedGroups, setCollapsedGroups] = useState(() => new Set(EXERCISE_GROUP_ORDER.map((g) => g.key)));
 
   useEffect(() => {
@@ -1680,15 +1672,6 @@ function ExercisesView({ initialSearch, onConsumeInitialSearch, allSessions, sta
     // search term — not on every keystroke change to the local search state.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const toggleFilter = (key) => {
-    setActiveFilters((prev) => {
-      const next = new Set(prev);
-      if (next.has(key)) next.delete(key);
-      else next.add(key);
-      return next;
-    });
-  };
 
   const toggleGroup = (key) => {
     setCollapsedGroups((prev) => {
@@ -1742,12 +1725,11 @@ function ExercisesView({ initialSearch, onConsumeInitialSearch, allSessions, sta
 
   const visibleExercises = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return ALL_EXERCISES.filter(({ exercise, lift }) => {
+    return ALL_EXERCISES.filter(({ exercise }) => {
       if (q && !exercise.toLowerCase().includes(q)) return false;
-      if (activeFilters.size > 0 && !activeFilters.has(lift || "none")) return false;
       return true;
     });
-  }, [search, activeFilters]);
+  }, [search]);
 
   const groups = useMemo(() => {
     const byKey = { squat: [], bench: [], deadlift: [], none: [] };
@@ -1757,7 +1739,7 @@ function ExercisesView({ initialSearch, onConsumeInitialSearch, allSessions, sta
     return EXERCISE_GROUP_ORDER.map((g) => ({ ...g, items: byKey[g.key] })).filter((g) => g.items.length > 0);
   }, [visibleExercises]);
 
-  const isSearchOrFilterActive = search.trim() !== "" || activeFilters.size > 0;
+  const isSearchActive = search.trim() !== "";
 
   return (
     <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", width: "100%" }}>
@@ -1806,53 +1788,17 @@ function ExercisesView({ initialSearch, onConsumeInitialSearch, allSessions, sta
           </button>
         )}
       </div>
-
-      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 12 }}>
-        {EXERCISE_FILTER_OPTIONS.map((opt) => {
-          const isActive = activeFilters.has(opt.key);
-          return (
-            <button
-              key={opt.key}
-              onClick={() => toggleFilter(opt.key)}
-              aria-pressed={isActive}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 6,
-                padding: "10px 16px",
-                borderRadius: 20,
-                border: isActive ? "1px solid var(--cb-accent)" : "1px solid var(--cb-border-strong)",
-                background: isActive ? "rgba(232,217,197,0.1)" : "transparent",
-                color: isActive ? "var(--cb-accent)" : "var(--cb-text-muted)",
-                fontFamily: "'Oswald', sans-serif",
-                fontSize: 12,
-                fontWeight: 600,
-                textTransform: "uppercase",
-                letterSpacing: "0.03em",
-                cursor: "pointer",
-              }}
-            >
-              {opt.color ? (
-                <span style={{ width: 8, height: 8, borderRadius: "50%", background: opt.color, flexShrink: 0 }} />
-              ) : (
-                <span style={{ width: 8, height: 8, borderRadius: "50%", border: "1.5px solid var(--cb-border-muted)", flexShrink: 0 }} />
-              )}
-              {opt.label}
-            </button>
-          );
-        })}
-      </div>
       </div>
 
       <div className="cb-scroll-pane" style={{ flex: 1, minHeight: 0, paddingTop: 20, paddingBottom: 140 }}>
       <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
         {groups.length === 0 ? (
           <div style={{ color: "var(--cb-text-faint)", fontSize: 13, padding: 24, border: "1px dashed var(--cb-border-strong)", borderRadius: 6, textAlign: "center" }}>
-            No exercises match your search or filters.
+            No exercises match your search.
           </div>
         ) : (
           groups.map((group) => {
-            const isOpen = isSearchOrFilterActive || !collapsedGroups.has(group.key);
+            const isOpen = isSearchActive || !collapsedGroups.has(group.key);
             return (
               <div key={group.key}>
                 <div
@@ -2645,6 +2591,36 @@ export default function CalgaryBarbellApp() {
     setMode("exercises");
   };
 
+  /* Swipe left/right anywhere in the tab content area switches between the
+     5 main tabs, in NAV_TABS order. Guarded so it doesn't fire while a
+     modal/overlay is open, and requires a clearly horizontal gesture so it
+     never fights with normal vertical scrolling. */
+  const touchStartRef = useRef(null);
+  const swipeBlocked = settingsOpen || !!historyExercise || showWorkoutComplete;
+  const handleContentTouchStart = (e) => {
+    if (swipeBlocked || e.touches.length !== 1) {
+      touchStartRef.current = null;
+      return;
+    }
+    touchStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  };
+  const handleContentTouchEnd = (e) => {
+    const start = touchStartRef.current;
+    touchStartRef.current = null;
+    if (!start || swipeBlocked) return;
+    const touch = e.changedTouches && e.changedTouches[0];
+    if (!touch) return;
+    const dx = touch.clientX - start.x;
+    const dy = touch.clientY - start.y;
+    const SWIPE_THRESHOLD = 70;
+    if (Math.abs(dx) < SWIPE_THRESHOLD || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+    const currentIndex = NAV_TABS.findIndex((t) => t.value === mode);
+    if (currentIndex === -1) return;
+    const nextIndex = dx < 0 ? currentIndex + 1 : currentIndex - 1;
+    if (nextIndex < 0 || nextIndex >= NAV_TABS.length) return;
+    setMode(NAV_TABS[nextIndex].value);
+  };
+
   const jumpToDayFromOverview = (d) => {
     if (isTaper) setTaperLabel(TAPER_LABELS_SORTED[d - 1]);
     else setDay(String(d));
@@ -2987,20 +2963,17 @@ export default function CalgaryBarbellApp() {
       </div>
       </div>
 
-      <div className="cb-content" style={{ flex: 1, minHeight: 0, overflow: "hidden", display: "flex", flexDirection: "column", padding: "0 18px" }}>
+      <div
+        className="cb-content"
+        style={{ flex: 1, minHeight: 0, overflow: "hidden", display: "flex", flexDirection: "column", padding: "0 18px" }}
+        onTouchStart={handleContentTouchStart}
+        onTouchEnd={handleContentTouchEnd}
+      >
       {mode === "log" && (
         <>
           <div style={{ flexShrink: 0, paddingTop: 16, paddingBottom: 14 }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", rowGap: 8 }}>
-              <button
-                onClick={() => setMode("overview")}
-                style={{ background: "transparent", border: "none", color: "var(--cb-text-faint)", cursor: "pointer", fontFamily: "'Oswald', sans-serif", fontSize: 15, textTransform: "uppercase", letterSpacing: "0.04em", padding: "10px 8px", margin: "-10px -8px" }}
-              >
-                ‹ Week Overview
-              </button>
-              <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 14, color: "var(--cb-text-muted)", textTransform: "uppercase", letterSpacing: "0.04em" }}>
-                {isTaper ? taperLabel.replace(/ from Competition/i, "") : `Week ${week} · Day ${day}`}
-              </div>
+            <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 14, color: "var(--cb-text-muted)", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+              {isTaper ? taperLabel.replace(/ from Competition/i, "") : `Week ${week} · Day ${day}`}
             </div>
 
             <div style={{ marginTop: 14, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
