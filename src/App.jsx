@@ -453,7 +453,7 @@ function NavTabIcon({ value, size = 20 }) {
 function CollapsibleSection({ title, defaultOpen = true, children }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div style={{ marginTop: 22 }}>
+    <div style={{ marginTop: 14 }}>
       <div
         onClick={() => setOpen((o) => !o)}
         style={{
@@ -461,6 +461,7 @@ function CollapsibleSection({ title, defaultOpen = true, children }) {
           alignItems: "center",
           justifyContent: "space-between",
           cursor: "pointer",
+          paddingTop: 8,
           paddingBottom: 8,
           borderBottom: "1px solid var(--cb-border)",
         }}
@@ -649,6 +650,9 @@ function ExerciseRow({ entry, idx, setStates, onToggleSet, log, onLogChange, exp
               color: done ? "var(--cb-green-text)" : "var(--cb-text-primary)",
               wordBreak: "break-word",
               cursor: "pointer",
+              padding: "8px 4px",
+              margin: "-8px -4px",
+              display: "inline-block",
             }}
           >
             {entry.exercise}
@@ -887,8 +891,8 @@ function SettingsPanel({ maxesLb, roundToLb, roundToKg, unit, barType, startDate
               key={t.key}
               onClick={() => onChange({ theme: t.key })}
               style={{
-                padding: "3px 10px",
-                fontSize: 11,
+                padding: "10px 16px",
+                fontSize: 12,
                 fontFamily: "'Oswald', sans-serif",
                 fontWeight: 600,
                 background: theme === t.key ? "var(--cb-accent)" : "transparent",
@@ -913,8 +917,8 @@ function SettingsPanel({ maxesLb, roundToLb, roundToKg, unit, barType, startDate
               key={u}
               onClick={() => onChange({ unit: u })}
               style={{
-                padding: "3px 10px",
-                fontSize: 11,
+                padding: "10px 16px",
+                fontSize: 12,
                 fontFamily: "'Oswald', sans-serif",
                 fontWeight: 600,
                 background: unit === u ? "var(--cb-accent)" : "transparent",
@@ -1017,7 +1021,7 @@ function SettingsPanel({ maxesLb, roundToLb, roundToKg, unit, barType, startDate
             onClick={onExportBackup}
             style={{
               flex: 1,
-              padding: "8px 0",
+              padding: "12px 0",
               background: "transparent",
               border: "1px solid var(--cb-border-strong)",
               borderRadius: 3,
@@ -1036,7 +1040,7 @@ function SettingsPanel({ maxesLb, roundToLb, roundToKg, unit, barType, startDate
             onClick={() => fileInputRef.current && fileInputRef.current.click()}
             style={{
               flex: 1,
-              padding: "8px 0",
+              padding: "12px 0",
               background: "transparent",
               border: "1px solid var(--cb-border-strong)",
               borderRadius: 3,
@@ -1072,7 +1076,7 @@ function SettingsPanel({ maxesLb, roundToLb, roundToKg, unit, barType, startDate
         style={{
           marginTop: 16,
           width: "100%",
-          padding: "8px 0",
+          padding: "12px 0",
           background: "var(--cb-accent)",
           border: "none",
           borderRadius: 3,
@@ -1237,7 +1241,7 @@ function RestTimerBar({ timer, onDismiss, onExtend }) {
           <button
             onClick={onDismiss}
             aria-label="Dismiss rest timer"
-            style={{ background: "transparent", border: "none", color: "var(--cb-text-muted)", cursor: "pointer", fontSize: 26, lineHeight: 1, padding: "4px 8px" }}
+            style={{ background: "transparent", border: "none", color: "var(--cb-text-muted)", cursor: "pointer", fontSize: 26, lineHeight: 1, padding: "10px 12px", margin: "-10px -12px -10px 0" }}
           >
             ×
           </button>
@@ -1777,15 +1781,16 @@ function ExercisesView({ initialSearch, onConsumeInitialSearch, allSessions, sta
         />
         {search && (
           <button
+            className="cb-clear-btn"
             onClick={() => setSearch("")}
             aria-label="Clear search"
             style={{
               position: "absolute",
               top: "50%",
-              right: 6,
+              right: 4,
               transform: "translateY(-50%)",
-              width: 30,
-              height: 30,
+              width: 36,
+              height: 36,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -1814,7 +1819,7 @@ function ExercisesView({ initialSearch, onConsumeInitialSearch, allSessions, sta
                 display: "flex",
                 alignItems: "center",
                 gap: 6,
-                padding: "6px 12px",
+                padding: "10px 16px",
                 borderRadius: 20,
                 border: isActive ? "1px solid var(--cb-accent)" : "1px solid var(--cb-border-strong)",
                 background: isActive ? "rgba(232,217,197,0.1)" : "transparent",
@@ -2261,7 +2266,25 @@ function ExerciseHistoryModal({ exercise, sessions, unit, onClose }) {
               </div>
             )}
           </div>
-          <button onClick={onClose} style={{ background: "transparent", border: "none", color: "var(--cb-text-faint)", fontSize: 22, lineHeight: 1, cursor: "pointer", flexShrink: 0 }}>
+          <button
+            onClick={onClose}
+            aria-label="Close"
+            style={{
+              width: 34,
+              height: 34,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              background: "transparent",
+              border: "none",
+              color: "var(--cb-text-faint)",
+              fontSize: 22,
+              lineHeight: 1,
+              cursor: "pointer",
+              flexShrink: 0,
+              margin: "-6px -6px 0 0",
+            }}
+          >
             ×
           </button>
         </div>
@@ -2817,6 +2840,7 @@ export default function CalgaryBarbellApp() {
           .cb-row-bottom { gap: 18px !important; }
           .cb-row-bottom > div:last-child { gap: 14px !important; }
           .cb-icon-btn { width: 40px !important; height: 40px !important; }
+          .cb-clear-btn { width: 42px !important; height: 42px !important; }
         }
       `}</style>
 
@@ -2836,8 +2860,8 @@ export default function CalgaryBarbellApp() {
             <button
               onClick={() => setSettingsOpen((o) => !o)}
               style={{
-                width: 40,
-                height: 40,
+                width: 44,
+                height: 44,
                 borderRadius: "50%",
                 border: "1px solid var(--cb-border-strong)",
                 background: "var(--cb-surface-2)",
