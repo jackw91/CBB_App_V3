@@ -310,13 +310,19 @@ function isDayComplete(entries, session) {
    program in order (week 1 day 1 ... week 16 day 4). If nothing has been
    completed yet, that's week 1 day 1. Returns null once the whole program
    is finished. */
-function computeNextWorkout(allSessions) {
+function buildProgramSequence() {
   const sequence = [];
   for (let w = 1; w <= 16; w++) {
     for (let d = 1; d <= 4; d++) {
       if (getEntriesAbs(w, d).length > 0) sequence.push({ week: w, day: d });
     }
   }
+  return sequence;
+}
+const PROGRAM_SEQUENCE = buildProgramSequence();
+
+function computeNextWorkout(allSessions) {
+  const sequence = PROGRAM_SEQUENCE;
   let lastCompletedIndex = -1;
   sequence.forEach((pt, i) => {
     const session = allSessions[`${pt.week}:${pt.day}`];
@@ -2592,33 +2598,84 @@ export default function CalgaryBarbellApp() {
   };
 
   /* Swipe left/right anywhere in the tab content area switches between the
-     5 main tabs, in NAV_TABS order. Guarded so it doesn't fire while a
-     modal/overlay is open, and requires a clearly horizontal gesture so it
-     never fights with normal vertical scrolling. */
+     5 main tabs, in NAV_TABS order. The content follows the finger in real
+     time rather than snapping instantly, with light resistance at the first
+     and last tab, and either finishes the transition (sliding the new tab
+     in from the opposite edge) or springs back if released short of the
+     commit threshold. Guarded so it doesn't fire while a modal/overlay is
+     open, and bails out to normal scrolling the moment a gesture turns out
+     to be more vertical than horizontal. */
   const touchStartRef = useRef(null);
+  const contentRef = useRef(null);
   const swipeBlocked = settingsOpen || !!historyExercise || showWorkoutComplete;
+  const [dragX, setDragX] = useState(0);
+  const [dragAnimating, setDragAnimating] = useState(false);
+
   const handleContentTouchStart = (e) => {
-    if (swipeBlocked || e.touches.length !== 1) {
+    if (swipeBlocked || dragAnimating || e.touches.length !== 1) {
       touchStartRef.current = null;
       return;
     }
-    touchStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    touchStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY, lock: null };
   };
-  const handleContentTouchEnd = (e) => {
+
+  const handleContentTouchMove = (e) => {
     const start = touchStartRef.current;
-    touchStartRef.current = null;
     if (!start || swipeBlocked) return;
-    const touch = e.changedTouches && e.changedTouches[0];
-    if (!touch) return;
+    const touch = e.touches[0];
     const dx = touch.clientX - start.x;
     const dy = touch.clientY - start.y;
-    const SWIPE_THRESHOLD = 70;
-    if (Math.abs(dx) < SWIPE_THRESHOLD || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+    if (start.lock == null) {
+      if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+      start.lock = Math.abs(dx) > Math.abs(dy) * 1.3;
+      if (!start.lock) {
+        touchStartRef.current = null;
+        return;
+      }
+    }
+    if (!start.lock) return;
     const currentIndex = NAV_TABS.findIndex((t) => t.value === mode);
-    if (currentIndex === -1) return;
-    const nextIndex = dx < 0 ? currentIndex + 1 : currentIndex - 1;
-    if (nextIndex < 0 || nextIndex >= NAV_TABS.length) return;
-    setMode(NAV_TABS[nextIndex].value);
+    let next = dx;
+    if (currentIndex === 0 && dx > 0) next = dx * 0.35;
+    if (currentIndex === NAV_TABS.length - 1 && dx < 0) next = dx * 0.35;
+    setDragX(next);
+  };
+
+  const handleContentTouchEnd = () => {
+    const start = touchStartRef.current;
+    touchStartRef.current = null;
+    if (!start || !start.lock) {
+      if (dragX !== 0) setDragX(0);
+      return;
+    }
+    const width = (contentRef.current && contentRef.current.clientWidth) || 320;
+    const commit = Math.abs(dragX) > width * 0.28;
+    const currentIndex = NAV_TABS.findIndex((t) => t.value === mode);
+    const direction = dragX < 0 ? 1 : -1; // dragging left reveals the next tab
+    const targetIndex = currentIndex + direction;
+    const canCommit = commit && targetIndex >= 0 && targetIndex < NAV_TABS.length;
+
+    if (!canCommit) {
+      setDragAnimating(true);
+      setDragX(0);
+      setTimeout(() => setDragAnimating(false), 240);
+      return;
+    }
+
+    setDragAnimating(true);
+    setDragX(direction * width);
+    setTimeout(() => {
+      setMode(NAV_TABS[targetIndex].value);
+      setDragAnimating(false);
+      setDragX(-direction * width);
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setDragAnimating(true);
+          setDragX(0);
+          setTimeout(() => setDragAnimating(false), 240);
+        });
+      });
+    }, 220);
   };
 
   const jumpToDayFromOverview = (d) => {
@@ -2639,6 +2696,20 @@ export default function CalgaryBarbellApp() {
       setDay(String(targetDay));
     }
   };
+
+  const dayIndexInProgram = PROGRAM_SEQUENCE.findIndex((pt) => pt.week === absWeek && pt.day === absDay);
+  const canStepDay = (delta) => {
+    const idx = dayIndexInProgram + delta;
+    return dayIndexInProgram !== -1 && idx >= 0 && idx < PROGRAM_SEQUENCE.length;
+  };
+  const stepDay = (delta) => {
+    const idx = dayIndexInProgram + delta;
+    if (dayIndexInProgram === -1 || idx < 0 || idx >= PROGRAM_SEQUENCE.length) return;
+    const target = PROGRAM_SEQUENCE[idx];
+    jumpToSession(target.week, target.day);
+  };
+  const prevDay = () => stepDay(-1);
+  const nextDay = () => stepDay(1);
 
   const goToWeekOverview = (targetWeek) => {
     const targetPhase = weekToPhase(targetWeek);
@@ -2964,16 +3035,48 @@ export default function CalgaryBarbellApp() {
       </div>
 
       <div
+        ref={contentRef}
         className="cb-content"
-        style={{ flex: 1, minHeight: 0, overflow: "hidden", display: "flex", flexDirection: "column", padding: "0 18px" }}
+        style={{
+          flex: 1,
+          minHeight: 0,
+          overflow: "hidden",
+          display: "flex",
+          flexDirection: "column",
+          padding: "0 18px",
+          transform: dragX ? `translateX(${dragX}px)` : undefined,
+          transition: dragAnimating ? "transform 0.24s ease" : "none",
+        }}
         onTouchStart={handleContentTouchStart}
+        onTouchMove={handleContentTouchMove}
         onTouchEnd={handleContentTouchEnd}
       >
       {mode === "log" && (
         <>
           <div style={{ flexShrink: 0, paddingTop: 16, paddingBottom: 14 }}>
-            <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 14, color: "var(--cb-text-muted)", textTransform: "uppercase", letterSpacing: "0.04em" }}>
-              {isTaper ? taperLabel.replace(/ from Competition/i, "") : `Week ${week} · Day ${day}`}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <button
+                onClick={prevDay}
+                disabled={!canStepDay(-1)}
+                style={{ background: "transparent", border: "1px solid var(--cb-border-strong)", borderRadius: 6, color: !canStepDay(-1) ? "var(--cb-border-strong)" : "var(--cb-text-secondary)", padding: "10px 16px", fontSize: 20, lineHeight: 1, cursor: !canStepDay(-1) ? "default" : "pointer" }}
+              >
+                ‹
+              </button>
+              <div style={{ textAlign: "center" }}>
+                <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 18, fontWeight: 600, color: "var(--cb-accent)", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                  {isTaper ? taperLabel.replace(/ from Competition/i, "") : `Day ${day}`}
+                </div>
+                <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "var(--cb-text-faint)", marginTop: 2 }}>
+                  {isTaper ? "Taper Week" : `Week ${week}`}
+                </div>
+              </div>
+              <button
+                onClick={nextDay}
+                disabled={!canStepDay(1)}
+                style={{ background: "transparent", border: "1px solid var(--cb-border-strong)", borderRadius: 6, color: !canStepDay(1) ? "var(--cb-border-strong)" : "var(--cb-text-secondary)", padding: "10px 16px", fontSize: 20, lineHeight: 1, cursor: !canStepDay(1) ? "default" : "pointer" }}
+              >
+                ›
+              </button>
             </div>
 
             <div style={{ marginTop: 14, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
