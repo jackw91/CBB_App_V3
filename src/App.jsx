@@ -229,7 +229,7 @@ async function loadAllSessions() {
   return map;
 }
 
-const EMPTY_SESSION = () => ({ completion: {}, logs: {}, notes: "", date: "" });
+const EMPTY_SESSION = () => ({ completion: {}, logs: {}, notes: "", date: "", manuallyCompleted: false });
 
 /* A shared AudioContext, created/resumed only inside a real user-gesture
    handler (e.g. tapping a set checkbox) so the browser's autoplay policy
@@ -298,12 +298,25 @@ function getSetStates(entry, session, idx) {
 }
 
 /* Whether every set of every exercise in a day has been checked off. */
-function isDayComplete(entries, session) {
+/* Whether every set of every exercise has actually been checked off,
+   ignoring any manual override. Used to decide when the manual
+   "mark complete anyway" control is worth showing. */
+function allSetsChecked(entries, session) {
   if (!entries || entries.length === 0) return false;
   return entries.every((entry, idx) => {
     const st = getSetStates(entry, session, idx);
     return st.length > 0 && st.every(Boolean);
   });
+}
+
+/* A day counts as complete either because every set was checked off, or
+   because the person explicitly marked it complete anyway (e.g. they
+   skipped an exercise or some sets but still want the program to move
+   on). Everything that drives "is this day done" — the day-card badge,
+   Next Workout progression, etc. — should go through this. */
+function isDayComplete(entries, session) {
+  if (session && session.manuallyCompleted) return true;
+  return allSetsChecked(entries, session);
 }
 
 /* The day immediately after the most recently completed day, walking the
@@ -2546,6 +2559,17 @@ export default function CalgaryBarbellApp() {
     [session, persistSession, entries]
   );
 
+  const toggleManualComplete = useCallback(() => {
+    const wasComplete = isDayComplete(entries, session);
+    const nextSession = { ...session, manuallyCompleted: !session.manuallyCompleted };
+    if (nextSession.manuallyCompleted && !nextSession.date) nextSession.date = todayISO();
+    const willBeComplete = isDayComplete(entries, nextSession);
+    persistSession(nextSession);
+    if (!wasComplete && willBeComplete) {
+      setShowWorkoutComplete(true);
+    }
+  }, [session, persistSession, entries]);
+
   const updateLog = useCallback(
     (idx, log) => {
       persistSession({ ...session, logs: { ...session.logs, [idx]: log } });
@@ -2636,8 +2660,8 @@ export default function CalgaryBarbellApp() {
     if (!start.lock) return;
     const currentIndex = NAV_TABS.findIndex((t) => t.value === mode);
     let next = dx;
-    if (currentIndex === 0 && dx > 0) next = dx * 0.35;
-    if (currentIndex === NAV_TABS.length - 1 && dx < 0) next = dx * 0.35;
+    if (currentIndex === 0 && dx > 0) next = dx * 0.55;
+    if (currentIndex === NAV_TABS.length - 1 && dx < 0) next = dx * 0.55;
     setDragX(next);
   };
 
@@ -2658,24 +2682,24 @@ export default function CalgaryBarbellApp() {
     if (!canCommit) {
       setDragAnimating(true);
       setDragX(0);
-      setTimeout(() => setDragAnimating(false), 240);
+      setTimeout(() => setDragAnimating(false), 320);
       return;
     }
 
     setDragAnimating(true);
-    setDragX(direction * width);
+    setDragX(-direction * width);
     setTimeout(() => {
       setMode(NAV_TABS[targetIndex].value);
       setDragAnimating(false);
-      setDragX(-direction * width);
+      setDragX(direction * width);
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
           setDragAnimating(true);
           setDragX(0);
-          setTimeout(() => setDragAnimating(false), 240);
+          setTimeout(() => setDragAnimating(false), 320);
         });
       });
-    }, 220);
+    }, 260);
   };
 
   const jumpToDayFromOverview = (d) => {
@@ -3045,7 +3069,7 @@ export default function CalgaryBarbellApp() {
           flexDirection: "column",
           padding: "0 18px",
           transform: dragX ? `translateX(${dragX}px)` : undefined,
-          transition: dragAnimating ? "transform 0.24s ease" : "none",
+          transition: dragAnimating ? "transform 0.32s cubic-bezier(0.22, 1, 0.36, 1)" : "none",
         }}
         onTouchStart={handleContentTouchStart}
         onTouchMove={handleContentTouchMove}
@@ -3109,6 +3133,34 @@ export default function CalgaryBarbellApp() {
                 {doneCount}/{total}
               </div>
             </div>
+
+            {doneCount < total && (
+              <label style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 8, cursor: "pointer", userSelect: "none" }}>
+                <span
+                  onClick={toggleManualComplete}
+                  style={{
+                    width: 18,
+                    height: 18,
+                    borderRadius: 3,
+                    border: `2px solid ${session.manuallyCompleted ? "var(--cb-green)" : "var(--cb-border-muted)"}`,
+                    background: session.manuallyCompleted ? "var(--cb-green)" : "transparent",
+                    flexShrink: 0,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  {session.manuallyCompleted && (
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--cb-text-on-green)" strokeWidth="4">
+                      <path d="M4 12.5l5 5L20 6" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  )}
+                </span>
+                <span style={{ fontSize: 12, fontFamily: "'IBM Plex Mono', monospace", color: "var(--cb-text-muted)" }}>
+                  Mark this workout complete anyway
+                </span>
+              </label>
+            )}
           </div>
 
           <div className="cb-scroll-pane" style={{ flex: 1, minHeight: 0, paddingBottom: 140 }}>
