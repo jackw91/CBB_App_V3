@@ -297,10 +297,8 @@ function getSetStates(entry, session, idx) {
   return Array(total).fill(false);
 }
 
-/* Whether every set of every exercise in a day has been checked off. */
 /* Whether every set of every exercise has actually been checked off,
-   ignoring any manual override. Used to decide when the manual
-   "mark complete anyway" control is worth showing. */
+   ignoring any manual override. */
 function allSetsChecked(entries, session) {
   if (!entries || entries.length === 0) return false;
   return entries.every((entry, idx) => {
@@ -806,7 +804,16 @@ function ExerciseRow({ entry, idx, setStates, onToggleSet, log, onLogChange, exp
       {expanded && (
         <div className="cb-expand-panel" style={{ padding: "4px 16px 16px 16px", display: "flex", flexDirection: "column", gap: 12 }}>
           {prescribed.r != null && (
-            <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", userSelect: "none" }}>
+            <label
+              style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", userSelect: "none" }}
+              onClick={() => {
+                if (matched) {
+                  onLogChange(idx, { w: null, r: null, rpe: null });
+                } else {
+                  onLogChange(idx, { w: prescribed.w, r: prescribed.r, rpe: prescribed.rpe });
+                }
+              }}
+            >
               <span
                 style={{
                   width: 18,
@@ -818,13 +825,6 @@ function ExerciseRow({ entry, idx, setStates, onToggleSet, log, onLogChange, exp
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                }}
-                onClick={() => {
-                  if (matched) {
-                    onLogChange(idx, { w: null, r: null, rpe: null });
-                  } else {
-                    onLogChange(idx, { w: prescribed.w, r: prescribed.r, rpe: prescribed.rpe });
-                  }
                 }}
               >
                 {matched && (
@@ -3166,9 +3166,11 @@ export default function CalgaryBarbellApp() {
           </div>
 
           {doneCount < total && (
-            <label style={{ marginTop: 14, display: "flex", alignItems: "center", gap: 8, cursor: "pointer", userSelect: "none" }}>
+            <label
+              style={{ marginTop: 14, display: "flex", alignItems: "center", gap: 8, cursor: "pointer", userSelect: "none" }}
+              onClick={toggleManualComplete}
+            >
               <span
-                onClick={toggleManualComplete}
                 style={{
                   width: 18,
                   height: 18,
