@@ -3133,34 +3133,6 @@ export default function CalgaryBarbellApp() {
                 {doneCount}/{total}
               </div>
             </div>
-
-            {doneCount < total && (
-              <label style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 8, cursor: "pointer", userSelect: "none" }}>
-                <span
-                  onClick={toggleManualComplete}
-                  style={{
-                    width: 18,
-                    height: 18,
-                    borderRadius: 3,
-                    border: `2px solid ${session.manuallyCompleted ? "var(--cb-green)" : "var(--cb-border-muted)"}`,
-                    background: session.manuallyCompleted ? "var(--cb-green)" : "transparent",
-                    flexShrink: 0,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  {session.manuallyCompleted && (
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--cb-text-on-green)" strokeWidth="4">
-                      <path d="M4 12.5l5 5L20 6" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  )}
-                </span>
-                <span style={{ fontSize: 12, fontFamily: "'IBM Plex Mono', monospace", color: "var(--cb-text-muted)" }}>
-                  Mark this workout complete anyway
-                </span>
-              </label>
-            )}
           </div>
 
           <div className="cb-scroll-pane" style={{ flex: 1, minHeight: 0, paddingBottom: 140 }}>
@@ -3192,6 +3164,34 @@ export default function CalgaryBarbellApp() {
               />
             ))}
           </div>
+
+          {doneCount < total && (
+            <label style={{ marginTop: 14, display: "flex", alignItems: "center", gap: 8, cursor: "pointer", userSelect: "none" }}>
+              <span
+                onClick={toggleManualComplete}
+                style={{
+                  width: 18,
+                  height: 18,
+                  borderRadius: 3,
+                  border: `2px solid ${session.manuallyCompleted ? "var(--cb-green)" : "var(--cb-border-muted)"}`,
+                  background: session.manuallyCompleted ? "var(--cb-green)" : "transparent",
+                  flexShrink: 0,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                {session.manuallyCompleted && (
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--cb-text-on-green)" strokeWidth="4">
+                    <path d="M4 12.5l5 5L20 6" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                )}
+              </span>
+              <span style={{ fontSize: 12, fontFamily: "'IBM Plex Mono', monospace", color: "var(--cb-text-muted)" }}>
+                Mark this workout complete without finishing all exercises
+              </span>
+            </label>
+          )}
 
           <NotesBox value={session.notes || ""} onChange={updateNotes} />
           </div>
