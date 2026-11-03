@@ -1995,8 +1995,155 @@ function ExercisesView({ initialSearch, onConsumeInitialSearch, allSessions, arc
   );
 }
 
+/* ============================= PR SECTION (used inside InsightsView) ============================= */
+function PRSection({ prData, unit, archives }) {
+  const hasArchives = (archives || []).length > 0;
+  const [scope, setScope] = useState("alltime"); // "alltime" | "current"
+
+  const activeSeries = scope === "alltime" ? prData.allTimeSeries : prData.series;
+  const activeBest   = scope === "alltime" ? prData.allTimeBest   : prData.best;
+
+  /* For the current-program view keep the original week-indexed x-axis label.
+     For all-time use the date string (trimmed to MM-DD or YY-MM-DD). */
+  const xKey = scope === "alltime" ? "date" : "week";
+  const xFormatter = scope === "alltime"
+    ? (d) => (d && d.length >= 10 ? d.slice(5) : d)   // "YYYY-MM-DD" → "MM-DD"
+    : (w) => `W${w}`;
+  const tooltipLabel = scope === "alltime"
+    ? (d) => d
+    : (w) => `Week ${w}`;
+
+  return (
+    <div>
+      {/* Scope filter — only shown when there is archived data to compare */}
+      {hasArchives && (
+        <div style={{ display: "flex", gap: 0, marginBottom: 14, border: "1px solid var(--cb-border-strong)", borderRadius: 4, overflow: "hidden", alignSelf: "flex-start", width: "fit-content" }}>
+          {[{ key: "alltime", label: "All Time" }, { key: "current", label: "Current Program" }].map((opt) => (
+            <button
+              key={opt.key}
+              onClick={() => setScope(opt.key)}
+              style={{
+                padding: "8px 14px",
+                fontSize: 12,
+                fontFamily: "'Oswald', sans-serif",
+                fontWeight: 600,
+                background: scope === opt.key ? "var(--cb-accent)" : "transparent",
+                color: scope === opt.key ? "var(--cb-text-on-accent)" : "var(--cb-text-muted-2)",
+                border: "none",
+                cursor: "pointer",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* One card per lift */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        {["squat", "bench", "deadlift"].map((lift) => {
+          const b = activeBest[lift];
+          const liftHasData = b.e1rm > 0 || b.weight > 0;
+
+          /* How many data points exist for this lift in the series? */
+          const pointsWithData = activeSeries.filter((pt) => pt[`${lift}_weight`] || pt[`${lift}_e1rm`]);
+          /* Scrollable chart: cap visible window at ~20 points; if more, show a scroll container */
+          const POINTS_PER_VIEW = 20;
+          const needsScroll = pointsWithData.length > POINTS_PER_VIEW;
+          /* Width in px per data point so the chart doesn't crowd on mobile */
+          const chartPxPerPoint = 28;
+          const chartMinWidth = Math.max(300, pointsWithData.length * chartPxPerPoint);
+
+          return (
+            <div key={lift} style={{ border: "1px solid var(--cb-border)", borderRadius: 6, padding: 14, background: "var(--cb-surface)" }}>
+              {/* Header */}
+              <div style={{ display: "flex", alignItems: "center", marginBottom: 10 }}>
+                <LiftBadge lift={lift} />
+                <span style={{ fontFamily: "'Oswald', sans-serif", fontSize: 14, textTransform: "uppercase", letterSpacing: "0.04em", color: "var(--cb-text-primary)", fontWeight: 600 }}>
+                  {LIFT_META[lift].label}
+                </span>
+              </div>
+
+              {!liftHasData ? (
+                <div style={{ color: "var(--cb-text-faint)", fontSize: 12, padding: "16px 0", textAlign: "center" }}>No sets logged yet</div>
+              ) : (
+                <>
+                  {/* Stat boxes */}
+                  <div style={{ display: "flex", gap: 18, marginBottom: 12, flexWrap: "wrap" }}>
+                    <div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--cb-text-faint)", fontFamily: "'Oswald', sans-serif" }}>
+                        <PBMedal size={10} variant={scope === "alltime" ? "alltime" : "current"} />
+                        {scope === "alltime" ? "All-Time E1RM" : "Program E1RM"}
+                      </div>
+                      <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 22, fontWeight: 600, color: "var(--cb-text-primary)" }}>
+                        {b.e1rm || "—"} <span style={{ fontSize: 11, color: "var(--cb-text-muted-2)", fontFamily: "'IBM Plex Mono', monospace" }}>{unitLabel(unit)}</span>
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--cb-text-faint)", fontFamily: "'Oswald', sans-serif" }}>
+                        <PBMedal size={10} variant={scope === "alltime" ? "alltime" : "current"} />
+                        {scope === "alltime" ? "All-Time Heaviest" : "Program Heaviest"}
+                      </div>
+                      <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 22, fontWeight: 600, color: "var(--cb-text-primary)" }}>
+                        {b.weight || "—"} <span style={{ fontSize: 11, color: "var(--cb-text-muted-2)", fontFamily: "'IBM Plex Mono', monospace" }}>{unitLabel(unit)}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Chart — horizontally scrollable when there are many data points */}
+                  {pointsWithData.length > 0 && (
+                    <>
+                      {needsScroll && (
+                        <div style={{ fontSize: 10, color: "var(--cb-text-faint)", fontFamily: "'IBM Plex Mono', monospace", marginBottom: 4 }}>
+                          ← scroll chart →
+                        </div>
+                      )}
+                      <div
+                        className="cb-scroll-pane"
+                        style={{ overflowX: needsScroll ? "auto" : "visible", overflowY: "hidden", WebkitOverflowScrolling: "touch" }}
+                      >
+                        <div style={{ width: needsScroll ? chartMinWidth : "100%", height: 140 }}>
+                          <ResponsiveContainer width="100%" height="100%">
+                            <LineChart data={activeSeries} margin={{ top: 4, right: 8, bottom: 0, left: -28 }}>
+                              <CartesianGrid stroke="var(--cb-border)" strokeDasharray="3 3" />
+                              <XAxis
+                                dataKey={xKey}
+                                stroke="var(--cb-text-faint)"
+                                fontSize={9}
+                                tickLine={false}
+                                tickFormatter={xFormatter}
+                                interval={needsScroll ? 0 : "preserveStartEnd"}
+                              />
+                              <YAxis stroke="var(--cb-text-faint)" fontSize={9} tickLine={false} domain={["auto", "auto"]} />
+                              <Tooltip
+                                contentStyle={{ background: "var(--cb-surface-2)", border: "1px solid var(--cb-border-strong)", fontFamily: "'IBM Plex Mono', monospace", fontSize: 11 }}
+                                labelFormatter={tooltipLabel}
+                              />
+                              <Line type="monotone" dataKey={`${lift}_e1rm`} stroke="var(--cb-text-primary)" strokeDasharray="4 3" dot={{ r: 2 }} connectNulls name="E1RM" strokeWidth={1.5} />
+                              <Line type="monotone" dataKey={`${lift}_weight`} stroke={LIFT_META[lift].color} dot={{ r: 2 }} connectNulls name="Heaviest" strokeWidth={2} />
+                            </LineChart>
+                          </ResponsiveContainer>
+                        </div>
+                      </div>
+                      <div style={{ display: "flex", gap: 14, marginTop: 4, justifyContent: "center", fontSize: 10, color: "var(--cb-text-muted-2)", fontFamily: "'IBM Plex Mono', monospace" }}>
+                        <span>— E1RM</span>
+                        <span style={{ opacity: 0.7 }}>┄ Heaviest</span>
+                      </div>
+                    </>
+                  )}
+                </>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 /* ============================= INSIGHTS (E1RM CHART + HEATMAP) ============================= */
-function InsightsView({ unit, sessions, loadingData }) {
+function InsightsView({ unit, sessions, archives, loadingData }) {
   const chartData = useMemo(() => {
     const perWeek = {}; // week -> {squat, bench, deadlift}
     for (let w = 1; w <= 16; w++) perWeek[w] = { week: w };
@@ -2049,21 +2196,24 @@ function InsightsView({ unit, sessions, loadingData }) {
   }, [sessions, unit]);
 
   const prData = useMemo(() => {
+    /* Build a flat chronological history of best weight + e1rm per session,
+       per lift — scanning archives first (oldest → newest), then live sessions.
+       Each point gets a short label for the x-axis. */
     const perWeek = {};
     for (let w = 1; w <= 16; w++) perWeek[w] = { week: w };
     const best = {
-      squat: { e1rm: 0, weight: 0 },
-      bench: { e1rm: 0, weight: 0 },
+      squat:    { e1rm: 0, weight: 0 },
+      bench:    { e1rm: 0, weight: 0 },
       deadlift: { e1rm: 0, weight: 0 },
     };
     for (const key of Object.keys(sessions)) {
       const [weekStr, dayStr] = key.split(":");
       const week = Number(weekStr);
-      const day = Number(dayStr);
+      const day  = Number(dayStr);
       const session = sessions[key];
       const entries = getEntriesAbs(week, day);
       entries.forEach((entry, idx) => {
-        const log = session.logs?.[idx];
+        const log  = session.logs?.[idx];
         const lift = resolveLift(entry);
         if (!log || !lift || !LIFT_META[lift]) return;
         if (log.w != null) {
@@ -2083,8 +2233,66 @@ function InsightsView({ unit, sessions, loadingData }) {
         }
       });
     }
-    return { series: Object.values(perWeek), best };
-  }, [sessions, unit]);
+
+    /* All-time history: one chronological data point per unique date×lift,
+       collapsing all sets on the same calendar date to the best of that day. */
+    const buildHistory = (sessionsMap, labelPrefix) => {
+      const byDate = {}; // date -> { squat_e1rm, squat_weight, ... }
+      for (const key of Object.keys(sessionsMap || {})) {
+        const [weekStr, dayStr] = key.split(":");
+        const week = Number(weekStr);
+        const day  = Number(dayStr);
+        const session = sessionsMap[key];
+        const dateKey = session.date || `${labelPrefix}W${week}D${day}`;
+        if (!byDate[dateKey]) byDate[dateKey] = { date: dateKey };
+        const entries = getEntriesAbs(week, day);
+        entries.forEach((entry, idx) => {
+          const log  = session.logs?.[idx];
+          const lift = resolveLift(entry);
+          if (!log || !lift || !LIFT_META[lift]) return;
+          if (log.w != null) {
+            const wD = unit === "kg" ? lbToKg(log.w) : log.w;
+            const cur = byDate[dateKey][`${lift}_weight`];
+            if (!cur || wD > cur) byDate[dateKey][`${lift}_weight`] = Math.round(wD * 10) / 10;
+          }
+          if (log.w != null && log.r != null) {
+            const e1rm = epleyE1rmLb(log.w, log.r);
+            if (e1rm) {
+              const eD = unit === "kg" ? lbToKg(e1rm) : e1rm;
+              const cur = byDate[dateKey][`${lift}_e1rm`];
+              if (!cur || eD > cur) byDate[dateKey][`${lift}_e1rm`] = Math.round(eD);
+            }
+          }
+        });
+      }
+      return byDate;
+    };
+
+    /* Merge archive history + live history into one sorted array */
+    const allByDate = {};
+    (archives || []).forEach((archive) => {
+      const archiveDates = buildHistory(archive.sessions || {}, archive.name.slice(0, 8));
+      Object.assign(allByDate, archiveDates);
+    });
+    const liveDates = buildHistory(sessions, "");
+    Object.assign(allByDate, liveDates);
+    const allTimeSeries = Object.values(allByDate).sort((a, b) => (a.date < b.date ? -1 : 1));
+
+    /* Also compute archive+live "best" for the all-time stat boxes */
+    const allTimeBest = {
+      squat:    { e1rm: 0, weight: 0 },
+      bench:    { e1rm: 0, weight: 0 },
+      deadlift: { e1rm: 0, weight: 0 },
+    };
+    allTimeSeries.forEach((pt) => {
+      ["squat", "bench", "deadlift"].forEach((lift) => {
+        if ((pt[`${lift}_weight`] || 0) > allTimeBest[lift].weight) allTimeBest[lift].weight = pt[`${lift}_weight`];
+        if ((pt[`${lift}_e1rm`]   || 0) > allTimeBest[lift].e1rm)   allTimeBest[lift].e1rm   = pt[`${lift}_e1rm`];
+      });
+    });
+
+    return { series: Object.values(perWeek), best, allTimeSeries, allTimeBest };
+  }, [sessions, archives, unit]);
 
   const heatmapCells = useMemo(() => {
     const cells = [];
@@ -2106,7 +2314,7 @@ function InsightsView({ unit, sessions, loadingData }) {
   }, [sessions]);
 
   const hasAnyE1rm = chartData.some((d) => d.squat || d.bench || d.deadlift);
-  const hasAnyPR = Object.values(prData.best).some((b) => b.e1rm > 0 || b.weight > 0);
+  const hasAnyPR = Object.values(prData.allTimeBest).some((b) => b.e1rm > 0 || b.weight > 0);
   const hasAnyTonnage = tonnageData.some((d) => d.squat || d.bench || d.deadlift);
 
   return (
@@ -2169,58 +2377,7 @@ function InsightsView({ unit, sessions, loadingData }) {
             Log actual weight &amp; reps to track your heaviest lifts and best estimated 1RM per lift here.
           </div>
         ) : (
-          <div className="cb-pr-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))", gap: 14 }}>
-            {["squat", "bench", "deadlift"].map((lift) => {
-              const b = prData.best[lift];
-              const liftHasData = b.e1rm > 0 || b.weight > 0;
-              return (
-                <div key={lift} style={{ border: "1px solid var(--cb-border)", borderRadius: 6, padding: 14, background: "var(--cb-surface)" }}>
-                  <div style={{ display: "flex", alignItems: "center", marginBottom: 10 }}>
-                    <LiftBadge lift={lift} />
-                    <span style={{ fontFamily: "'Oswald', sans-serif", fontSize: 14, textTransform: "uppercase", letterSpacing: "0.04em", color: "var(--cb-text-primary)", fontWeight: 600 }}>
-                      {LIFT_META[lift].label}
-                    </span>
-                  </div>
-                  {!liftHasData ? (
-                    <div style={{ color: "var(--cb-text-faint)", fontSize: 12, padding: "16px 0", textAlign: "center" }}>No sets logged yet</div>
-                  ) : (
-                    <>
-                      <div style={{ display: "flex", gap: 18, marginBottom: 10 }}>
-                        <div>
-                          <div style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--cb-text-faint)", fontFamily: "'Oswald', sans-serif" }}>Best E1RM</div>
-                          <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 22, fontWeight: 600, color: "var(--cb-text-primary)" }}>
-                            {b.e1rm || "—"} <span style={{ fontSize: 11, color: "var(--cb-text-muted-2)", fontFamily: "'IBM Plex Mono', monospace" }}>{unitLabel(unit)}</span>
-                          </div>
-                        </div>
-                        <div>
-                          <div style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--cb-text-faint)", fontFamily: "'Oswald', sans-serif" }}>Heaviest Weight</div>
-                          <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 22, fontWeight: 600, color: "var(--cb-text-primary)" }}>
-                            {b.weight || "—"} <span style={{ fontSize: 11, color: "var(--cb-text-muted-2)", fontFamily: "'IBM Plex Mono', monospace" }}>{unitLabel(unit)}</span>
-                          </div>
-                        </div>
-                      </div>
-                      <div style={{ width: "100%", height: 130 }}>
-                        <ResponsiveContainer>
-                          <LineChart data={prData.series} margin={{ top: 4, right: 8, bottom: 0, left: -28 }}>
-                            <CartesianGrid stroke="var(--cb-border)" strokeDasharray="3 3" />
-                            <XAxis dataKey="week" stroke="var(--cb-text-faint)" fontSize={9} tickLine={false} />
-                            <YAxis stroke="var(--cb-text-faint)" fontSize={9} tickLine={false} domain={["auto", "auto"]} />
-                            <Tooltip contentStyle={{ background: "var(--cb-surface-2)", border: "1px solid var(--cb-border-strong)", fontFamily: "'IBM Plex Mono', monospace", fontSize: 11 }} labelFormatter={(w) => `Week ${w}`} />
-                            <Line type="monotone" dataKey={`${lift}_e1rm`} stroke="var(--cb-text-primary)" strokeDasharray="4 3" dot={{ r: 2 }} connectNulls name="E1RM" strokeWidth={1.5} />
-                            <Line type="monotone" dataKey={`${lift}_weight`} stroke={LIFT_META[lift].color} dot={{ r: 2 }} connectNulls name="Heaviest" strokeWidth={2} />
-                          </LineChart>
-                        </ResponsiveContainer>
-                      </div>
-                      <div style={{ display: "flex", gap: 14, marginTop: 4, justifyContent: "center", fontSize: 10, color: "var(--cb-text-muted-2)", fontFamily: "'IBM Plex Mono', monospace" }}>
-                        <span>— E1RM</span>
-                        <span style={{ opacity: 0.7 }}>┄ Heaviest</span>
-                      </div>
-                    </>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+          <PRSection prData={prData} unit={unit} archives={archives} />
         )}
       </CollapsibleSection>
 
@@ -3404,7 +3561,7 @@ export default function CalgaryBarbellApp() {
 
       {mode === "insights" && (
         <div className="cb-scroll-pane" style={{ flex: 1, minHeight: 0, paddingTop: 16, paddingBottom: 24 }}>
-          <InsightsView unit={unit} sessions={allSessions} loadingData={loadingHistory} />
+          <InsightsView unit={unit} sessions={allSessions} archives={archives} loadingData={loadingHistory} />
         </div>
       )}
       </div>
