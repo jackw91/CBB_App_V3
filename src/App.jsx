@@ -2963,6 +2963,17 @@ export default function CalgaryBarbellApp() {
       touchStartRef.current = null;
       return;
     }
+    /* If the touch starts inside any element that itself scrolls horizontally
+       (e.g. a scrollable chart wrapper), don't capture it for tab-switching —
+       let the element handle its own horizontal scroll instead. */
+    let el = e.target;
+    while (el && el !== contentRef.current) {
+      if (el.scrollWidth > el.clientWidth + 2) {
+        touchStartRef.current = null;
+        return;
+      }
+      el = el.parentElement;
+    }
     touchStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY, lock: null };
   };
 
