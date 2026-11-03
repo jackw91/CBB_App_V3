@@ -1764,6 +1764,9 @@ function ExerciseCard({ exercise, lift, stats, unit, loadingData, allTimeBestLb 
                   <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 0", borderTop: i === 0 ? "none" : "1px solid var(--cb-border-2)" }}>
                     <div style={{ minWidth: 0 }}>
                       <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 12, color: "var(--cb-text-secondary)" }}>{label}</div>
+                      {h.archiveLabel && (
+                        <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9, color: "var(--cb-text-faint)", marginTop: 1, fontStyle: "italic" }}>{h.archiveLabel}</div>
+                      )}
                       {h.date && <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: "var(--cb-text-faint)", marginTop: 1 }}>{h.date}</div>}
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
@@ -1823,29 +1826,43 @@ function ExercisesView({ initialSearch, onConsumeInitialSearch, allSessions, arc
         history: [],
       };
     });
-    for (const key of Object.keys(allSessions || {})) {
-      const [weekStr, dayStr] = key.split(":");
-      const week = Number(weekStr);
-      const day = Number(dayStr);
-      const session = allSessions[key];
-      if (startDate && (!session.date || session.date < startDate)) continue;
-      const entries = getEntriesAbs(week, day);
-      entries.forEach((entry, idx) => {
-        const stat = map[entry.exercise];
-        if (!stat) return;
-        const log = session.logs?.[idx];
-        if (!log || log.w == null || log.r == null) return;
-        stat.timesPerformed += 1;
-        const sets = Number(entry.sets) || 0;
-        stat.totalTonnageLb += sets * log.r * log.w;
-        const e1rm = epleyE1rmLb(log.w, log.r);
-        if (e1rm && e1rm > stat.bestE1rmLb) stat.bestE1rmLb = e1rm;
-        stat.history.push({ week, day, date: session.date, w: log.w, r: log.r, rpe: log.rpe });
-      });
-    }
-    Object.values(map).forEach((s) => s.history.sort((a, b) => a.week - b.week || a.day - b.day));
+
+    /* Helper: scan one sessions map into the stats map.
+       archiveLabel is shown in history entries so you can tell which
+       program a set came from (null = current live program). */
+    const scanSessions = (sessionsMap, archiveLabel) => {
+      for (const key of Object.keys(sessionsMap || {})) {
+        const [weekStr, dayStr] = key.split(":");
+        const week = Number(weekStr);
+        const day = Number(dayStr);
+        const session = sessionsMap[key];
+        const entries = getEntriesAbs(week, day);
+        entries.forEach((entry, idx) => {
+          const stat = map[entry.exercise];
+          if (!stat) return;
+          const log = session.logs?.[idx];
+          if (!log || log.w == null || log.r == null) return;
+          stat.timesPerformed += 1;
+          const sets = Number(entry.sets) || 0;
+          stat.totalTonnageLb += sets * log.r * log.w;
+          const e1rm = epleyE1rmLb(log.w, log.r);
+          if (e1rm && e1rm > stat.bestE1rmLb) stat.bestE1rmLb = e1rm;
+          stat.history.push({ week, day, date: session.date, w: log.w, r: log.r, rpe: log.rpe, archiveLabel });
+        });
+      }
+    };
+
+    /* Scan archived programs first (oldest → newest), then the live program */
+    (archives || []).forEach((archive) => scanSessions(archive.sessions || {}, archive.name));
+    scanSessions(allSessions, null);
+
+    Object.values(map).forEach((s) => s.history.sort((a, b) => {
+      /* Sort by calendar date when available, otherwise by week/day */
+      if (a.date && b.date) return a.date < b.date ? -1 : a.date > b.date ? 1 : 0;
+      return a.week - b.week || a.day - b.day;
+    }));
     return map;
-  }, [allSessions, startDate, currentProgramBestWeightLb]);
+  }, [allSessions, archives, startDate, currentProgramBestWeightLb]);
 
   const visibleExercises = useMemo(() => {
     const q = search.trim().toLowerCase();
