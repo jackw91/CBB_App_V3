@@ -217,6 +217,14 @@ async function storageListPrefix(prefix) {
     return [];
   }
 }
+async function loadArchives() {
+  return storageGet("archives", []);
+}
+async function saveArchive(archive) {
+  const existing = await loadArchives();
+  await storageSet("archives", [...existing, archive]);
+}
+
 async function loadAllSessions() {
   const keys = await storageListPrefix("session:");
   const map = {};
@@ -343,11 +351,33 @@ function computeNextWorkout(allSessions) {
   return nextIndex < sequence.length ? sequence[nextIndex] : null;
 }
 
-/* The all-time heaviest logged weight per exercise, across every session
-   regardless of program start date — the single source of truth for what
-   counts as a PB. Shared by the Log tab's PB medal and the Exercises tab's
-   PB stat, so the two can never drift out of sync. */
-function computeAllTimeBestWeights(allSessions) {
+/* The all-time heaviest logged weight per exercise, scanning both live
+   sessions and any archived programs — the single source of truth for the
+   all-time PB badge. */
+function computeAllTimeBestWeights(allSessions, archives) {
+  const map = {};
+  const scanSessions = (sessionsMap) => {
+    for (const key of Object.keys(sessionsMap || {})) {
+      const [weekStr, dayStr] = key.split(":");
+      const week = Number(weekStr);
+      const day = Number(dayStr);
+      const session = sessionsMap[key];
+      const entries = getEntriesAbs(week, day);
+      entries.forEach((entry, idx) => {
+        const log = session.logs?.[idx];
+        if (!log || log.w == null) return;
+        if (!map[entry.exercise] || log.w > map[entry.exercise]) map[entry.exercise] = log.w;
+      });
+    }
+  };
+  scanSessions(allSessions);
+  (archives || []).forEach((archive) => scanSessions(archive.sessions || {}));
+  return map;
+}
+
+/* The heaviest logged weight per exercise within the current (live) program
+   only — used for the current-program PB gold medal badge. */
+function computeCurrentProgramBestWeights(allSessions) {
   const map = {};
   for (const key of Object.keys(allSessions || {})) {
     const [weekStr, dayStr] = key.split(":");
@@ -383,11 +413,27 @@ function LiftBadge({ lift }) {
   );
 }
 
-/* A small gold medal icon, shown next to a set that matches or beats the
-   all-time best weight logged for that exercise. */
-function PBMedal({ size = 16 }) {
+/* PB badge icon — two variants:
+   "current"  → gold medal  (best in the current program)
+   "alltime"  → trophy cup  (best across all programs, including archives) */
+function PBMedal({ size = 16, variant = "current" }) {
+  if (variant === "alltime") {
+    return (
+      <span title="All-time personal best" aria-label="All-time personal best" style={{ display: "inline-flex", flexShrink: 0, lineHeight: 0 }}>
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="var(--cb-gold)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M6 3h12" />
+          <path d="M6 3v5a6 6 0 0 0 12 0V3" />
+          <path d="M4 3c0 3.5 1.5 6 2 7" />
+          <path d="M20 3c0 3.5-1.5 6-2 7" />
+          <path d="M12 14v4" />
+          <path d="M9 21h6" />
+        </svg>
+      </span>
+    );
+  }
+  /* default: "current" — the original gold medal */
   return (
-    <span title="Personal best" aria-label="Personal best" style={{ display: "inline-flex", flexShrink: 0, lineHeight: 0 }}>
+    <span title="Current program personal best" aria-label="Current program personal best" style={{ display: "inline-flex", flexShrink: 0, lineHeight: 0 }}>
       <svg width={size} height={size} viewBox="0 0 24 24">
         <path d="M8.3 2h7.4l-2.1 7.5h-3.2L8.3 2z" fill="var(--cb-medal-gold)" />
         <circle cx="12" cy="15" r="6.6" fill="var(--cb-medal-gold)" stroke="var(--cb-medal-ribbon)" strokeWidth="1" />
@@ -396,6 +442,7 @@ function PBMedal({ size = 16 }) {
     </span>
   );
 }
+
 
 function unitLabel(unit) {
   return unit === "kg" ? "kg" : "lb";
@@ -607,14 +654,18 @@ function verdictFor(entry, log, unit, roundToLb, roundToKg) {
   return { text: "Missed", color: "var(--cb-rust)" };
 }
 
-function ExerciseRow({ entry, idx, setStates, onToggleSet, log, onLogChange, expanded, onToggleExpand, maxesLb, unit, roundToLb, roundToKg, barType, onOpenHistory, onViewInExercises, bestWeightLb }) {
+function ExerciseRow({ entry, idx, setStates, onToggleSet, log, onLogChange, expanded, onToggleExpand, maxesLb, unit, roundToLb, roundToKg, barType, onOpenHistory, onViewInExercises, currentProgramBestLb, allTimeBestLb }) {
   const verdict = verdictFor(entry, log, unit, roundToLb, roundToKg);
   const prescribed = prescribedValues(entry, maxesLb, unit, roundToLb, roundToKg);
   const matched = isMatchPrescribed(entry, log, prescribed);
   const totalSets = setStates.length;
   const doneCount = setStates.filter(Boolean).length;
   const done = totalSets > 0 && doneCount === totalSets;
-  const isPB = log.w != null && bestWeightLb != null && log.w >= bestWeightLb;
+
+  /* Determine which PB badge (if any) to show. All-time supersedes current. */
+  const isAllTimePB = log.w != null && allTimeBestLb != null && log.w >= allTimeBestLb;
+  const isCurrentPB = !isAllTimePB && log.w != null && currentProgramBestLb != null && log.w >= currentProgramBestLb;
+  const pbVariant = isAllTimePB ? "alltime" : isCurrentPB ? "current" : null;
 
   return (
     <div style={{ borderBottom: "1px solid var(--cb-border)" }}>
@@ -627,12 +678,12 @@ function ExerciseRow({ entry, idx, setStates, onToggleSet, log, onLogChange, exp
           position: "relative",
         }}
       >
-        {isPB && (
+        {pbVariant && (
           <span style={{ position: "absolute", top: 10, right: 12 }}>
-            <PBMedal size={18} />
+            <PBMedal size={18} variant={pbVariant} />
           </span>
         )}
-        <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", rowGap: 4, paddingRight: isPB ? 26 : 0 }}>
+        <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", rowGap: 4, paddingRight: pbVariant ? 26 : 0 }}>
           {done ? (
             <span
               style={{
@@ -874,7 +925,7 @@ function NotesBox({ value, onChange }) {
   );
 }
 
-function SettingsPanel({ maxesLb, roundToLb, roundToKg, unit, barType, startDate, theme, onChange, open, onClose, onExportBackup, onImportFile }) {
+function SettingsPanel({ maxesLb, roundToLb, roundToKg, unit, barType, startDate, theme, onChange, open, onClose, onExportBackup, onImportFile, onArchive }) {
   if (!open) return null;
   const fileInputRef = useRef(null);
   const displayMax = (lift) => {
@@ -1090,6 +1141,36 @@ function SettingsPanel({ maxesLb, roundToLb, roundToKg, unit, barType, startDate
           Export a backup file before clearing your browser data or switching devices/browsers — import it here to restore everything.
         </div>
       </div>
+
+      {/* ---- Archive & Start Fresh ---- */}
+      <div style={{ marginTop: 14, paddingTop: 12, borderTop: "1px solid var(--cb-border-strong)" }}>
+        <label style={{ fontFamily: "'Oswald', sans-serif", fontSize: 13, color: "var(--cb-text-muted)", display: "block", marginBottom: 6 }}>
+          Archive &amp; Start Fresh
+        </label>
+        <div style={{ fontSize: 11, color: "var(--cb-text-faint)", marginBottom: 10 }}>
+          Saves your entire session history and training maxes as a named archive, then resets the app for a new program. All-time PBs remain visible across archived programs.
+        </div>
+        <button
+          onClick={onArchive}
+          style={{
+            width: "100%",
+            padding: "12px 0",
+            background: "transparent",
+            border: "1px solid var(--cb-rust)",
+            borderRadius: 3,
+            color: "var(--cb-rust)",
+            fontFamily: "'Oswald', sans-serif",
+            fontWeight: 600,
+            fontSize: 12,
+            textTransform: "uppercase",
+            letterSpacing: "0.03em",
+            cursor: "pointer",
+          }}
+        >
+          Archive current program…
+        </button>
+      </div>
+
       <button
         onClick={onClose}
         style={{
@@ -1526,13 +1607,16 @@ const EXERCISE_GROUP_ORDER = [
   { key: "none", label: "Accessory", color: null },
 ];
 
-function ExerciseCard({ exercise, lift, stats, unit, loadingData }) {
+function ExerciseCard({ exercise, lift, stats, unit, loadingData, allTimeBestLb }) {
   const description = EXERCISE_DESCRIPTIONS[exercise];
   const [expanded, setExpanded] = useState(false);
   const hasData = stats && stats.timesPerformed > 0;
 
   const displayTotal = hasData ? Math.round(unit === "kg" ? lbToKg(stats.totalTonnageLb) : stats.totalTonnageLb) : 0;
-  const displayPB = hasData ? Math.round((unit === "kg" ? lbToKg(stats.bestWeightLb) : stats.bestWeightLb) * 10) / 10 : 0;
+  const displayCurrentPB = hasData ? Math.round((unit === "kg" ? lbToKg(stats.bestWeightLb) : stats.bestWeightLb) * 10) / 10 : 0;
+  const displayAllTimePB = allTimeBestLb != null && allTimeBestLb > 0
+    ? Math.round((unit === "kg" ? lbToKg(allTimeBestLb) : allTimeBestLb) * 10) / 10
+    : displayCurrentPB;
   const displayE1rm = hasData ? Math.round(unit === "kg" ? lbToKg(stats.bestE1rmLb) : stats.bestE1rmLb) : 0;
 
   const chartData = hasData
@@ -1620,9 +1704,21 @@ function ExerciseCard({ exercise, lift, stats, unit, loadingData }) {
               </div>
             </div>
             <div>
-              <div style={{ fontSize: 9, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--cb-text-faint)", fontFamily: "'Oswald', sans-serif" }}>PB</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 9, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--cb-text-faint)", fontFamily: "'Oswald', sans-serif" }}>
+                <PBMedal size={11} variant="current" />
+                Current PB
+              </div>
               <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 17, fontWeight: 600, color: "var(--cb-text-primary)" }}>
-                {displayPB} <span style={{ fontSize: 10, color: "var(--cb-text-muted-2)", fontFamily: "'IBM Plex Mono', monospace" }}>{unitLabel(unit)}</span>
+                {displayCurrentPB} <span style={{ fontSize: 10, color: "var(--cb-text-muted-2)", fontFamily: "'IBM Plex Mono', monospace" }}>{unitLabel(unit)}</span>
+              </div>
+            </div>
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 9, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--cb-text-faint)", fontFamily: "'Oswald', sans-serif" }}>
+                <PBMedal size={11} variant="alltime" />
+                All-Time PB
+              </div>
+              <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 17, fontWeight: 600, color: "var(--cb-text-primary)" }}>
+                {displayAllTimePB} <span style={{ fontSize: 10, color: "var(--cb-text-muted-2)", fontFamily: "'IBM Plex Mono', monospace" }}>{unitLabel(unit)}</span>
               </div>
             </div>
             <div>
@@ -1657,7 +1753,9 @@ function ExerciseCard({ exercise, lift, stats, unit, loadingData }) {
               .map((h, i) => {
                 const label = h.week === 16 ? (TAPER_LABELS_SORTED[h.day - 1] || "").replace(/ from Competition/i, "") : `Week ${h.week} · Day ${h.day}`;
                 const wDisplay = Math.round((unit === "kg" ? lbToKg(h.w) : h.w) * 100) / 100;
-                const isPB = h.w >= stats.bestWeightLb;
+                const isAT = h.w >= (allTimeBestLb ?? stats.bestWeightLb);
+                const isCur = !isAT && h.w >= stats.bestWeightLb;
+                const histBadge = isAT ? "alltime" : isCur ? "current" : null;
                 return (
                   <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 0", borderTop: i === 0 ? "none" : "1px solid var(--cb-border-2)" }}>
                     <div style={{ minWidth: 0 }}>
@@ -1665,7 +1763,7 @@ function ExerciseCard({ exercise, lift, stats, unit, loadingData }) {
                       {h.date && <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: "var(--cb-text-faint)", marginTop: 1 }}>{h.date}</div>}
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
-                      {isPB && <PBMedal size={14} />}
+                      {histBadge && <PBMedal size={14} variant={histBadge} />}
                       <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: "var(--cb-text-primary)" }}>
                         {wDisplay} {unitLabel(unit)} × {h.r} reps
                         {h.rpe != null ? ` @${h.rpe}` : ""}
@@ -1681,7 +1779,7 @@ function ExerciseCard({ exercise, lift, stats, unit, loadingData }) {
   );
 }
 
-function ExercisesView({ initialSearch, onConsumeInitialSearch, allSessions, startDate, unit, loadingData }) {
+function ExercisesView({ initialSearch, onConsumeInitialSearch, allSessions, archives, startDate, unit, loadingData }) {
   const [search, setSearch] = useState(() => initialSearch || "");
   const [collapsedGroups, setCollapsedGroups] = useState(() => new Set(EXERCISE_GROUP_ORDER.map((g) => g.key)));
 
@@ -1705,7 +1803,10 @@ function ExercisesView({ initialSearch, onConsumeInitialSearch, allSessions, sta
      it's been logged with actual weight & reps, total tonnage, best single
      weight, best E1RM, and the full chronological history for the chart.
      Restricted to sessions on/after the entered program start date, when set. */
-  const allTimeBestWeightLb = useMemo(() => computeAllTimeBestWeights(allSessions), [allSessions]);
+  /* All-time best: scans live sessions + all archived programs */
+  const allTimeBestWeightLb = useMemo(() => computeAllTimeBestWeights(allSessions, archives), [allSessions, archives]);
+  /* Current-program best: live sessions only */
+  const currentProgramBestWeightLb = useMemo(() => computeCurrentProgramBestWeights(allSessions), [allSessions]);
 
   const statsByExercise = useMemo(() => {
     const map = {};
@@ -1713,7 +1814,7 @@ function ExercisesView({ initialSearch, onConsumeInitialSearch, allSessions, sta
       map[exercise] = {
         timesPerformed: 0,
         totalTonnageLb: 0,
-        bestWeightLb: allTimeBestWeightLb[exercise] || 0,
+        bestWeightLb: currentProgramBestWeightLb[exercise] || 0,
         bestE1rmLb: 0,
         history: [],
       };
@@ -1740,7 +1841,7 @@ function ExercisesView({ initialSearch, onConsumeInitialSearch, allSessions, sta
     }
     Object.values(map).forEach((s) => s.history.sort((a, b) => a.week - b.week || a.day - b.day));
     return map;
-  }, [allSessions, startDate, allTimeBestWeightLb]);
+  }, [allSessions, startDate, currentProgramBestWeightLb]);
 
   const visibleExercises = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -1859,7 +1960,7 @@ function ExercisesView({ initialSearch, onConsumeInitialSearch, allSessions, sta
                 {isOpen && (
                   <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                     {group.items.map(({ exercise, lift }) => (
-                      <ExerciseCard key={exercise} exercise={exercise} lift={lift} stats={statsByExercise[exercise]} unit={unit} loadingData={loadingData} />
+                      <ExerciseCard key={exercise} exercise={exercise} lift={lift} stats={statsByExercise[exercise]} unit={unit} loadingData={loadingData} allTimeBestLb={allTimeBestWeightLb[exercise]} />
                     ))}
                   </div>
                 )}
@@ -2443,6 +2544,7 @@ export default function CalgaryBarbellApp() {
   const [timer, setTimer] = useState(null); // { label, endAt, duration }
   const [showWorkoutComplete, setShowWorkoutComplete] = useState(false);
   const [allSessions, setAllSessions] = useState({}); // "week:day" -> session, across the whole program
+  const [archives, setArchives] = useState([]); // saved program archives
   const [loadingHistory, setLoadingHistory] = useState(true);
   const [historyExercise, setHistoryExercise] = useState(null); // exercise name for drill-down modal
   const [pendingExerciseSearch, setPendingExerciseSearch] = useState(""); // seeds the Exercises tab search box when linked from the Log tab
@@ -2450,9 +2552,11 @@ export default function CalgaryBarbellApp() {
 
   const nextWorkout = useMemo(() => computeNextWorkout(allSessions), [allSessions]);
 
-  /* All-time heaviest logged weight per exercise — used to flag a set in
-     the Log tab as a PB the moment it ties or beats it. */
-  const exerciseBestWeightLb = useMemo(() => computeAllTimeBestWeights(allSessions), [allSessions]);
+  /* All-time heaviest logged weight per exercise — scans live sessions AND all archives.
+     Used to flag a set in the Log tab as an all-time PB the moment it ties or beats it. */
+  const exerciseBestWeightLb = useMemo(() => computeAllTimeBestWeights(allSessions, archives), [allSessions, archives]);
+  /* Current-program heaviest — live sessions only. Used for the current-program gold medal. */
+  const exerciseCurrentProgramBestLb = useMemo(() => computeCurrentProgramBestWeights(allSessions), [allSessions]);
 
   const isTaper = phase === "Taper Week";
   const absWeek = isTaper ? 16 : Number(week);
@@ -2492,8 +2596,9 @@ export default function CalgaryBarbellApp() {
   /* ---- load the whole program's session history once, for Insights / Calendar / drill-down ---- */
   useEffect(() => {
     (async () => {
-      const map = await loadAllSessions();
+      const [map, savedArchives] = await Promise.all([loadAllSessions(), loadArchives()]);
       setAllSessions(map);
+      setArchives(savedArchives || []);
       setLoadingHistory(false);
       if (!didInitialJump.current) {
         didInitialJump.current = true;
@@ -2620,6 +2725,46 @@ export default function CalgaryBarbellApp() {
     setPendingExerciseSearch(exerciseName);
     setMode("exercises");
   };
+
+  /* ---- Archive & Start Fresh ---- */
+  const handleArchive = useCallback(async () => {
+    const name = window.prompt(
+      "Name this archive (e.g. \"Calgary Barbell 16-Week — Oct 2026\"):",
+      "Calgary Barbell 16-Week Program"
+    );
+    if (name == null) return; // user cancelled
+    const trimmed = name.trim() || "Archived Program";
+    const confirmed = window.confirm(
+      `Archive "${trimmed}" and start fresh?\n\nYour session history and training maxes will be saved, then the app will reset for a new program. This cannot be undone.`
+    );
+    if (!confirmed) return;
+
+    // Build archive snapshot
+    const now = new Date().toISOString();
+    const archive = {
+      id: now,
+      name: trimmed,
+      archivedAt: now.slice(0, 10),
+      settings: { maxesLb, unit, barType, roundToLb, roundToKg, startDate },
+      sessions: { ...allSessions },
+    };
+
+    // Persist archive
+    await saveArchive(archive);
+
+    // Clear all session keys from localStorage
+    const sessionKeys = await storageListPrefix("session:");
+    for (const k of sessionKeys) {
+      localStorage.removeItem("cbb_" + k);
+    }
+
+    // Reset settings: clear maxes and startDate, keep preferences
+    const defaultMaxes = PROGRAM_DATA.trainingMaxes.maxes;
+    await storageSet("settings", { maxesLb: defaultMaxes, unit, barType, roundToLb, roundToKg, startDate: "", theme });
+
+    // Reload so all state is fully fresh
+    window.location.reload();
+  }, [allSessions, maxesLb, unit, barType, roundToLb, roundToKg, startDate, theme]);
 
   /* Swipe left/right anywhere in the tab content area switches between the
      5 main tabs, in NAV_TABS order. The content follows the finger in real
@@ -2970,6 +3115,7 @@ export default function CalgaryBarbellApp() {
               onClose={() => setSettingsOpen(false)}
               onExportBackup={exportBackup}
               onImportFile={importBackupFile}
+              onArchive={handleArchive}
             />
           </div>
         </div>
@@ -3160,7 +3306,8 @@ export default function CalgaryBarbellApp() {
                 barType={barType}
                 onOpenHistory={setHistoryExercise}
                 onViewInExercises={viewExerciseInExercisesTab}
-                bestWeightLb={exerciseBestWeightLb[entry.exercise]}
+                currentProgramBestLb={exerciseCurrentProgramBestLb[entry.exercise]}
+                allTimeBestLb={exerciseBestWeightLb[entry.exercise]}
               />
             ))}
           </div>
@@ -3221,6 +3368,7 @@ export default function CalgaryBarbellApp() {
           initialSearch={pendingExerciseSearch}
           onConsumeInitialSearch={() => setPendingExerciseSearch("")}
           allSessions={allSessions}
+          archives={archives}
           startDate={startDate}
           unit={unit}
           loadingData={loadingHistory}
