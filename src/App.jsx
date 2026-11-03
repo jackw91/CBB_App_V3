@@ -944,12 +944,15 @@ function SettingsPanel({ maxesLb, roundToLb, roundToKg, unit, barType, startDate
         background: "var(--cb-surface-2)",
         border: "1px solid var(--cb-border-strong)",
         borderRadius: 6,
-        padding: 18,
         width: 290,
         zIndex: 20,
         boxShadow: "0 12px 30px rgba(0,0,0,0.5)",
+        display: "flex",
+        flexDirection: "column",
+        maxHeight: "min(80vh, 560px)",
       }}
     >
+      <div className="cb-scroll-pane" style={{ flex: 1, overflowY: "auto", padding: 18 }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14, paddingBottom: 12, borderBottom: "1px solid var(--cb-border-strong)" }}>
         <label style={{ fontFamily: "'Oswald', sans-serif", fontSize: 13, color: "var(--cb-text-muted)" }}>Theme</label>
         <div style={{ display: "flex", border: "1px solid var(--cb-border-strong)", borderRadius: 3, overflow: "hidden" }}>
@@ -1191,6 +1194,7 @@ function SettingsPanel({ maxesLb, roundToLb, roundToKg, unit, barType, startDate
       >
         Done
       </button>
+      </div>{/* end scroll pane */}
     </div>
   );
 }
